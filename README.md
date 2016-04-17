@@ -6,7 +6,7 @@ This project is a fork of Rubustat (info below)
 ##Modifications
 
 * Added support for heat pumps.
-	This requires 4 devices to control cool, fan, reversing valve, and emergency Heat
+	This requires 4 devices to control cool, fan, reversing valve, and emergency heat
 
 * Switched weather from Yahoo to Wunderground.
 	You will need to apply for your own key, and there is a free key available at the time of writing.  Code is designed not to exceed the limitations of that free key.  But, this is a hazard with developmental code.
@@ -41,7 +41,7 @@ This project is a fork of Rubustat (info below)
 
 	sudo nano /etc/xdg/lxsession/LXDE-pi/autostart and modify to include only these lines:
 
-		openbox
+		@openbox
 		@sudo python /root/thermopi/thermogui.py
 
 The daemon can be started with `python rubustat_daemon.py start.`
