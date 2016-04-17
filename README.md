@@ -22,6 +22,8 @@ This project is a fork of Rubustat (info below)
 * Added configuration for active high or low GPIO output
 	I use a JBtek 4 Channel DC 5V Relay Module which has active low inputs.  The relays are SPDT, but the goal was to ensure no power draw was required to keep them off, e.g. if the program or the Pi itself were to fail.
 
+##Basic setup
+
 1. Copy the config.txt.template to config.txt
 
 2. Edit the above for your GPIO pins, ac type, etc.
@@ -42,6 +44,15 @@ This project is a fork of Rubustat (info below)
 
    openbox
    @sudo python /root/thermopi/thermogui.py
+
+The daemon can be started with `python rubustat_daemon.py start.`
+
+First run of, e.g., `python thermogui.py` will also start the daemon.
+
+After the first run, two sqlite databases will be created:
+
+	status.db (temperature readings, weather, unit status)
+	temperatureLogs.db (history)
 
 Rubustat
 ========
