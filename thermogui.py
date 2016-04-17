@@ -53,7 +53,7 @@ win.title('Rubustat')
 win.geometry('480x320')
 win.configure(background='black', cursor='none')
 # Production - no title bar
-win.overrideredirect(1)
+#win.overrideredirect(1)
 
 humidity = ''
 indoorTemp = ''
@@ -174,18 +174,10 @@ def setStat():
 			print "Setting new mode, temp to: " + mode + ', ' + target
 
 		conn = sqlite3.connect("status.db")
-		found = False
 		c = conn.cursor()
 		now = datetime.datetime.now()
-		cursor = c.execute("SELECT COUNT(datetime) FROM status")
-		for row in cursor:
-			found = True
 
-		if found == True:
-			c.execute("UPDATE status SET datetime=?, targetTemp=?, mode=?", (now, target, mode))
-		else:
-			c.execute("INSERT INTO status VALUES ('?', ?, '?')", (now, target, mode))
-
+		c.execute("INSERT OR REPLACE INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, target, mode))
 		conn.commit()
 		conn.close()
 
@@ -217,6 +209,10 @@ def updateTemp():
 		for row in cursor:
 			indoorTemp = float(row[0])
 			humidity = row[1]
+
+	else:
+		humidity = ''
+		indoorTemp = 0
 
 	conn.close()
 
