@@ -32,11 +32,11 @@ This project is a fork of Rubustat (info below)
 
  sudo nano /etc/rc.local to include the following:
 
-   modprobe w1-gpio
+   `modprobe w1-gpio
    modprobe w1-therm
    # This seems to be necessary in the event of a crash
    /bin/rm -rf /root/thermopi/rubustatDaemon.pid
-   python /root/thermopi/rubustat_web_interface.py &
+   python /root/thermopi/rubustat_web_interface.py &`
 
 4. (Optional) After you get your LCD display working, you will probably want to dedicate its use to the thermostat GUI.
 
