@@ -1,5 +1,6 @@
 Thermopi
 ========
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=cGZ4eZld1SE9d3kJrn64idYI86VRcez3)
 
 This project is a fork of Rubustat (info below)
 
