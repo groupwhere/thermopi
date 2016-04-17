@@ -5,21 +5,21 @@ This project is a fork of Rubustat (info below)
 
 ##Modifications
 
-* Added support for heat pumps
+* Added support for heat pumps.
 	This requires 4 devices to control cool, fan, reversing valve, and emergency Heat
 
-* Switched weather from Yahoo to Wunderground
+* Switched weather from Yahoo to Wunderground.
 	You will need to apply for your own key, and there is a free key available at the time of writing.  Code is designed not to exceed the limitations of that free key.  But, this is a hazard with developmental code.
 
 * Added GUI using tkinter, sized for a 4" LCD panel
 
-* Uses sqlite for status and weather
+* Uses sqlite for status and weather.
 	Backend writes the data and the GUI or web interface simply read from that database.
 
-* Added support for Adafruit DHT11 sensor for temperature and humidity
+* Added support for Adafruit DHT11 sensor for temperature and humidity.
 	Original code uses an DS18B20 sensor, which should still be possible.
 
-* Added configuration for active high or low GPIO output
+* Added configuration for active high or low GPIO output.
 	I use a JBtek 4 Channel DC 5V Relay Module which has active low inputs.  The relays are SPDT, but the goal was to ensure no power draw was required to keep them off, e.g. if the program or the Pi itself were to fail.
 
 ##Basic setup
