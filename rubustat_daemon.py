@@ -12,9 +12,11 @@ import json
 from daemon import Daemon
 from getIndoorTemp import getIndoorTemp
 from threading import Timer
+from operator import itemgetter
 
 import sqlite3
 import Adafruit_DHT
+from schedule import schedule
 
 #set working directory to where "rubustat_daemon.py" is
 abspath = os.path.abspath(__file__)
@@ -27,6 +29,7 @@ config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
 active_hysteresis = float(config.get('main','active_hysteresis'))
 inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
+SCALE = config.get('main','SCALE')
 ZIP = config.get('weather','ZIP')
 STATE = config.get('weather','STATE')
 WUNDERGROUND = config.get('weather','WUNDERGROUND')
@@ -45,6 +48,7 @@ emergency_temp = float(config.get('main','emergency_temp'))
 
 weatherEnabled = config.getboolean('weather','enabled')
 
+scheduleEnabled = config.getboolean('schedule','enabled')
 # Adafruit DHT11 and others
 sensor_type = config.get('main','sensor_type')
 sensor_pin  = int(config.get('main','sensor_pin'))
@@ -66,6 +70,8 @@ if mailEnabled == True:
 	errorThreshold = float(config.get('mail','errorThreshold'))
 
 class rubustatDaemon(Daemon):
+	schedule = schedule()
+
 	def configureGPIO(self):
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
@@ -211,7 +217,7 @@ class rubustatDaemon(Daemon):
 					"MIME-Version: 1.0",
 					"Content-Type: text/html"]
 			headers = "\r\n".join(headers)
-			session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT) 
+			session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
 			session.ehlo()
 			#you may need to comment this line out if you're a crazy person
 			#and use non-tls SMTP servers
@@ -236,12 +242,12 @@ class rubustatDaemon(Daemon):
 		weatherstring = 'Weather in ' + city + ', ' + state + ': ' + weather.lower() + ".\n" + 'The temperature is ' + temperature_string + ' and it feels like ' + feelslike_string + '.'
 		f.close()
 
-		conn = sqlite3.connect("status.db")
-		c = conn.cursor()
+		wconn = sqlite3.connect("status.db")
+		c = wconn.cursor()
 		now = datetime.datetime.now()
 		c.execute('INSERT INTO weather VALUES(?, ?)', (now, weatherstring))
-		conn.commit()
-		conn.close()
+		wconn.commit()
+		wconn.close()
 
 		return weatherstring
 
@@ -252,7 +258,10 @@ class rubustatDaemon(Daemon):
 		if sensor_type == 'DHT_11':
 			sensor = 11
 			humidity, temperature = Adafruit_DHT.read_retry(sensor, sensor_pin)
-			indoorTemp = float(temperature * 9/5.0 + 32)
+			if SCALE == 'F':
+				indoorTemp = float(temperature * 9/5.0 + 32)
+			else:
+				indoorTemp = float(temperature)
 		else:
 			#self.humidity = ''
 			humidity = ''
@@ -284,6 +293,9 @@ class rubustatDaemon(Daemon):
 		return str(humidity),str(round(indoorTemp,1))
 
 	def run(self):
+		# Logging
+		conn = sqlite3.connect("temperatureLogs.db")
+
 		lastLog = datetime.datetime.now()
 		lastMail = datetime.datetime.now()
 		self.configureGPIO()
@@ -302,9 +314,6 @@ class rubustatDaemon(Daemon):
 			(humidity,indoorTemp) = self.updateTemp()
 			humidity = float(humidity)
 			indoorTemp = float(indoorTemp)
-
-			# Logging
-			conn = sqlite3.connect("temperatureLogs.db")
 
 			hvacState = int(self.getHVACState())
 
@@ -328,8 +337,48 @@ class rubustatDaemon(Daemon):
 			logElapsed = now - lastLog
 			mailElapsed = now - lastMail
 
+			# Verify schedule is enabled but also that the unit was not set manually to 'off'.  Off means off.
+			if scheduleEnabled == True:
+				now = datetime.datetime.now()
+				# Set the current schedule
+				print "Checking schedule"
+				self.schedule.set_current()
+				# (re)set the mode based on the schedule, if any
+				self.schedule.check_schedule()
+				turnon = False
+				if mode != 'off':
+					if self.schedule.current:
+						turnon = True
+						# Compare indoorTemp and schedule temp settings
+						low  = itemgetter(6)(self.schedule.current)
+						high = itemgetter(7)(self.schedule.current)
+						if indoorTemp < low: #and mode != 'off':
+							mode = 'heat'
+							targetTemp = low
+						elif indoorTemp > high: #and mode != 'off':
+							mode = 'cool'
+							targetTemp = high
+
+				scconn = sqlite3.connect("status.db")
+				c = scconn.cursor()
+				# This is the schedule status not the schedule.db list of schedules.  Single line of data like the status table
+				c.execute("DELETE FROM schedule")
+				c.execute("INSERT INTO schedule (datetime,name,active) VALUES (?,?,?)", (now,itemgetter(1)(self.schedule.current), 1))
+				c.execute("DELETE FROM status")
+				c.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, targetTemp, mode))
+				scconn.commit()
+				scconn.close()
+
+				if DEBUG == 1 and self.schedule.current and turnon == True:
+					log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
+					log.write("Schedule: Set to " + str(self.schedule.current) + "\n")
+					log.write("Schedule: New mode set to " + mode + "\n")
+					log.write("Schedule: New targetTemp set to " + str(targetTemp) + "\n")
+					log.write("Schedule: LOW = " + str(low) + ", HIGH = " + str(high) + "\n")
+					log.close()
+
 			### check if we need to send error mail
-			#cooling 
+			#cooling
 			#it's 78, we want it to be 72, and the error threshold is 5 = this triggers
 			if mailEnabled == True and (mailElapsed > datetime.timedelta(minutes=20)) and (float(indoorTemp) - float(targetTemp)) > errorThreshold:
 				self.sendErrorMail()
@@ -339,7 +388,7 @@ class rubustatDaemon(Daemon):
 					log.write("MAIL: Sent mail to " + recipient + " at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
 					log.close()
 
-			#heat 
+			#heat
 			#it's 72, we want it to be 78, and the error threshold is 5 = this triggers
 			if mailEnabled == True and (mailElapsed > datetime.timedelta(minutes=20)) and (float(targetTemp) - float(indoorTemp)) > errorThreshold:
 				self.sendErrorMail()
@@ -350,7 +399,7 @@ class rubustatDaemon(Daemon):
 					log.close()
 
 			#logging actual temp and indoor temp to sqlite database.
-			#you can do fun things with this data, like make charts! 
+			#you can do fun things with this data, like make charts!
 			if logElapsed > datetime.timedelta(minutes=6):
 				c.execute('INSERT INTO logging VALUES(?, ?, ?)', (now, indoorTemp, targetTemp))
 				conn.commit()
@@ -476,7 +525,7 @@ class rubustatDaemon(Daemon):
 				log.write("fanStatus = " + str(fanStatus)+ "\n")
 				log.close()
 
-			time.sleep(5)
+			#time.sleep(5)
 
 if __name__ == "__main__":
 	daemon = rubustatDaemon('rubustatDaemon.pid')
@@ -487,13 +536,16 @@ if __name__ == "__main__":
 
 	conn = sqlite3.connect("temperatureLogs.db")
 	c = conn.cursor()
-	c.execute('CREATE TABLE IF NOT EXISTS logging (datetime TIMESTAMP, actualTemp FLOAT, targetTemp INT)')    
+	c.execute('CREATE TABLE IF NOT EXISTS logging (datetime TIMESTAMP, actualTemp FLOAT, targetTemp INT)')
+	conn.close()
 
 	sconn = sqlite3.connect("status.db")
 	cs = sconn.cursor()
-	cs.execute('CREATE TABLE IF NOT EXISTS weather (datetime TIMESTAMP, weather TEXT)')    
-	cs.execute('CREATE TABLE IF NOT EXISTS status (datetime TIMESTAMP, targetTemp INT, mode TEXT)')    
-	cs.execute('CREATE TABLE IF NOT EXISTS readings (datetime TIMESTAMP, indoorTemp TEXT, humidity TEXT)')    
+	cs.execute('CREATE TABLE IF NOT EXISTS weather (datetime TIMESTAMP, weather TEXT)')
+	cs.execute('CREATE TABLE IF NOT EXISTS status (datetime TIMESTAMP, targetTemp INT, mode TEXT)')
+	cs.execute('CREATE TABLE IF NOT EXISTS readings (datetime TIMESTAMP, indoorTemp TEXT, humidity TEXT)')
+	cs.execute('CREATE TABLE IF NOT EXISTS readings (datetime TIMESTAMP, indoorTemp TEXT, humidity TEXT)')
+	cs.execute('CREATE TABLE IF NOT EXISTS schedule (datetime TIMESTAMP, name TEXT, active BOOL)')
 	sconn.close()
 
 	if len(sys.argv) == 2:

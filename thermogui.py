@@ -38,6 +38,8 @@ PIN_OFF = int(config.get('main','PIN_OFF'))
 PIN_ON  = int(config.get('main','PIN_ON'))
 weatherEnabled = config.getboolean('weather','enabled')
 
+scheduleEnabled = config.getboolean('schedule','enabled')
+
 # Adafruit DHT11 and others
 sensor_type = config.get('main','sensor_type')
 sensor_pin  = int(config.get('main','sensor_pin'))
@@ -49,44 +51,44 @@ subprocess.Popen("/usr/bin/python rubustat_daemon.py start", shell=True)
 win = Tk()
 myFont = tkFont.Font(family = 'Helvetica', size='14', weight = 'bold')
 weatherFont = tkFont.Font(family = 'Helvetica', size='10', weight = 'bold')
+scheduleFont = tkFont.Font(family = 'Helvetica', size='8', weight = 'bold')
 win.title('Rubustat')
 win.geometry('480x320')
 win.configure(background='black', cursor='none')
 # Production - no title bar
-#win.overrideredirect(1)
+win.overrideredirect(1)
 
 humidity = ''
 indoorTemp = ''
 targetTemp = ''
 daemonStatus = ''
-weatherstring = ''
 mode = ''
+schedulename = ''
+scheduleactive = 0
 
 if weatherEnabled == True:
 	def getWeather():
-		global weatherstring
-
-		conn = sqlite3.connect("status.db")
+		gconn = sqlite3.connect("status.db")
 		found = False
-		cursor = conn.execute("SELECT COUNT(datetime) FROM weather")
+		cursor = gconn.execute("SELECT COUNT(datetime) FROM weather")
 		for row in cursor:
 			if row[0] > 0:
 				found = True
 
 		if found == True:
-			cursor = conn.execute('SELECT weather from weather ORDER BY datetime DESC LIMIT 1')
+			cursor = gconn.execute('SELECT weather from weather ORDER BY datetime DESC LIMIT 1')
 			for row in cursor:
 				weatherstring =  row[0]
 		else:
 			weatherstring = 'Weather information is currently unavailable.'
 
-		conn.close()
+		gconn.close()
 
 		return weatherstring
 
 def getWhatsOn():
-	if DEBUG == 1:
-		print "Called getWhatsOn\n"
+#	if DEBUG == 1:
+#		print "Called getWhatsOn\n"
 	obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
 	heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
 	coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -95,7 +97,7 @@ def getWhatsOn():
 	heatStringf.set("heat off")
 	coolStringf.set("cool off")
 	fanStringf.set("fan off")
-	idleStringf.set("RUNNING")
+	idleStringf.set("RUN")
 
 	if AC_TYPE == 0:
 		# Standard AC
@@ -133,21 +135,21 @@ def getDaemonStatus():
 		return "<p id=\"daemonNotRunning\"> DAEMON IS NOT RUNNING. </p>"
 
 def getStat():
-	if DEBUG == 1:
-		print "Called getStat\n"
+#	if DEBUG == 1:
+#		print "Called getStat\n"
 
 	mode = ''
 	targetTemp = 0
-	conn = sqlite3.connect("status.db")
+	gconn = sqlite3.connect("status.db")
 	found = False
 
-	cursor = conn.execute("SELECT COUNT(datetime) FROM status")
+	cursor = gconn.execute("SELECT COUNT(datetime) FROM status")
 	for row in cursor:
 		if row[0] > 0:
 			found = True
 
 	if found == True:
-		cursor = conn.execute('SELECT targetTemp, mode FROM status ORDER BY datetime DESC LIMIT 1')
+		cursor = gconn.execute('SELECT targetTemp, mode FROM status ORDER BY datetime DESC LIMIT 1')
 
 		for row in cursor:
 			targetTemp = int(row[0])
@@ -156,7 +158,7 @@ def getStat():
 		targetTemp = 75
 		mode = 'off'
 
-	conn.close()
+	gconn.close()
 	whatsOn.set(getWhatsOn())
 
 	#find out what mode the system is in, and set the switch accordingly
@@ -164,6 +166,28 @@ def getStat():
 
 	daemonStatus=getDaemonStatus()
 	return mode,targetTemp
+
+if scheduleEnabled == True:
+	def getSched():
+		gconn = sqlite3.connect("status.db")
+		found = False
+		cursor = gconn.execute("SELECT COUNT(datetime) FROM schedule")
+		schedulename = ''
+		scheduleactive = 0
+		for row in cursor:
+			if row[0] > 0:
+				found = True
+
+		if found == True:
+			cursor = gconn.execute('SELECT name, active FROM schedule ORDER BY datetime DESC LIMIT 1')
+
+			for row in cursor:
+				schedulename = row[0]
+				scheduleactive = row[1]
+		gconn.close()
+
+		#print "Schedule " + schedulename + " is " + str(scheduleactive)
+		return str(schedulename),bool(scheduleactive)
 
 def setStat():
 	target = TargetTempf.get()
@@ -173,13 +197,15 @@ def setStat():
 		if DEBUG == 1:
 			print "Setting new mode, temp to: " + mode + ', ' + target
 
-		conn = sqlite3.connect("status.db")
-		c = conn.cursor()
+		gconn = sqlite3.connect("status.db")
+		c = gconn.cursor()
 		now = datetime.datetime.now()
 
-		c.execute("INSERT OR REPLACE INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, target, mode))
-		conn.commit()
-		conn.close()
+		c.execute("DELETE FROM status")
+		#c.execute("INSERT OR REPLACE INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, target, mode))
+		c.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, target, mode))
+		gconn.commit()
+		gconn.close()
 
 		if DEBUG == 1:
 			print("New temperature of " + target + " set!")
@@ -193,18 +219,18 @@ def setStat():
 
 def updateTemp():
 	global humidity, indoorTemp
-	if DEBUG == 1:
-		print "Called updateTemp\n"
+#	if DEBUG == 1:
+#		print "Called updateTemp\n"
 
-	conn = sqlite3.connect("status.db")
+	gconn = sqlite3.connect("status.db")
 	found = False
-	cursor = conn.execute("SELECT COUNT(datetime) FROM readings")
+	cursor = gconn.execute("SELECT COUNT(datetime) FROM readings")
 	for row in cursor:
 		if row[0] > 0:
 			found = True
 
 	if found == True:
-		cursor = conn.execute('SELECT indoorTemp, humidity FROM readings ORDER BY datetime DESC LIMIT 1')
+		cursor = gconn.execute('SELECT indoorTemp, humidity FROM readings ORDER BY datetime DESC LIMIT 1')
 
 		for row in cursor:
 			indoorTemp = float(row[0])
@@ -214,9 +240,36 @@ def updateTemp():
 		humidity = ''
 		indoorTemp = 0
 
-	conn.close()
+	gconn.close()
 
 	return str(humidity),str(round(indoorTemp,1))
+
+def get_sched(name):
+	days = ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+	gconn = sqlite3.connect("schedule.db")
+	c = gconn.cursor()
+	for row in c.execute("SELECT name,startday,start,endday,end,low,high FROM schedule WHERE name='" + name + "'"):
+		startday = days[row[1]]
+		start    = row[2]
+		endday   = days[row[3]]
+		end      = row[4]
+		low      = str(row[5])
+		high     = str(row[6])
+	gconn.close()
+
+	return "starts " + startday + " at " + start + " and ends " + endday + " at " + end + " with min/max temp of " + low + "/" + high + "."
+
+def disSched():
+	if scheddisF.get() == 'enable':
+		scheddisF.set('disable')
+		newmode.set('cool')
+	else:
+		scheddisF.set('enable')
+		newmode.set('off')
+	setStat()
+
+def confSched():
+	print ""
 
 def updateWhatsOn():
 	return getWhatsOn()
@@ -237,7 +290,10 @@ def decr():
 
 def change_color():
 	current_text  = idleStringf.get()
-	if current_text == 'RUNNING':
+	#if current_text == 'RUNNING':
+	if current_text == 'UNIT IDLE':
+		idlestat.config(foreground='white')
+	else:
 		current_color = idlestat.cget("foreground")
 		if current_color == "black":
 			next_color = "white"
@@ -250,16 +306,36 @@ def main():
 	while True:
 		(humidity,indoorTemp) = updateTemp()
 		TargetTempf.set(targetTemp)
-		getWeather()
 		humidityf.set(humidity)
 		indoorTempf.set(indoorTemp)
 		whatsOn.set(getWhatsOn())
 
+		weatherstring = getWeather()
+		Weatherf.set(weatherstring)
+
+		if scheduleEnabled == True:
+			(schedulename,scheduleactive) = getSched()
+			if scheduleactive == True:
+				tmpf = str(idleStringf.get())
+				idleStringf.set('[' + schedulename + '] ' + tmpf)
+
+				tmps = get_sched(schedulename)
+				if newmode.get() == 'off':
+					scheduleStatf.set('[' + schedulename + '] INACTIVE' + "\n" + tmps)
+					scheddisF.set('enable')
+				else:
+					scheduleStatf.set('[' + schedulename + '] ACTIVE' + "\n" + tmps)
+					scheddisF.set('disable')
+			else:
+				scheduleStatf.set('[none] active')
+				scheddisF.set('enable')
+
+		# Flash the status indicator
 		change_color()
 
-		Weatherf.set(weatherstring) 
 		win.update_idletasks()
 		win.update()
+		win.geometry(win.geometry())
 
 # Form vars
 humidityf   = StringVar()
@@ -272,19 +348,23 @@ coolStringf = StringVar()
 fanStringf  = StringVar()
 idleStringf = StringVar()
 Weatherf    = StringVar()
+scheduleStatf = StringVar()
+scheddisF   = StringVar()
 
 # System vars
 whatsOn = StringVar()
 newTargetTemp = StringVar()
 
 # Draw stuff
-fill = Label(win,text="", width=7, bg='black', fg='white').grid(row=0,column=0,rowspan=10)
+fill = Label(win,text="", width=1, bg='black', fg='white').grid(row=0,column=0,rowspan=10)
+
 currentl = Label(win,text="Current temp", bg='black', fg='white').grid(row=0,column=1, sticky=E)
-current = Entry(win, textvariable=indoorTempf, font='Helvetica 24 bold', width=4, bg='black', fg='white').grid(row=0,column=2, columnspan=2, sticky=W)
+current = Entry(win, textvariable=indoorTempf, font='Helvetica 24 bold', width=4, bg='black', fg='white', border=0).grid(row=0,column=2, columnspan=2, sticky=W)
 humidityl = Label(win,text="Current humidity", bg='black', fg='white').grid(row=0,column=4)
-humidity = Entry(win, textvariable=humidityf, font='Helvetica 24 bold', width=4, bg='black', fg='white').grid(row=0,column=5)
+humidity = Entry(win, textvariable=humidityf, font='Helvetica 24 bold', width=4, bg='black', fg='white').grid(row=0,column=5, sticky=W)
 
 fill2 = Label(win,text="", width=7, bg='black', fg='white').grid(row=2,column=0,columnspan=5)
+#fill2 = Label(win,text="", width=7, bg='black', fg='white').grid(row=0,column=3,rowspan=10)
 
 if AC_TYPE == 0:
 	# Standard AC
@@ -306,6 +386,8 @@ fanstat  = Label(win,textvariable=fanStringf,  fg='green', bg='black').grid(row=
 idlestat = Label(win,textvariable=idleStringf, fg='white', bg='black')
 idlestat.grid(row=7, column=2, sticky=W)
 
+fill2 = Label(win,text="", width=1, bg='black', fg='white').grid(row=0,column=3,rowspan=10)
+
 templ = Label(win,text="Target temp", bg='black', fg='white').grid(row=3, column=4)
 temp = Entry(win, textvariable=TargetTempf,font='Helvetica 28 bold', justify=CENTER, width=4, bg='black', fg='white').grid(row=4, rowspan=2, column=4, sticky=N)
 arrowl = Button(win, text = '<', font = myFont, command = decr, bg='black', fg='white').grid(row=6, rowspan=2, column=4, sticky=SW)
@@ -314,8 +396,17 @@ goButton = Button(win, text = 'Go!', font = myFont, command = setStat, height = 
 
 fill3 = Label(win,text=" ", width=7, bg='black', fg='white').grid(row=8,column=0,columnspan=5)
 
-weatherhead = Label(win,text='Current Conditions', font=myFont, bg='black', fg='white').grid(row=9,column=1, sticky=N, columnspan=5)
-weatherstat = Label(win,textvariable=Weatherf, font=weatherFont, bg='black', fg='white', wraplength=300).grid(row=10,column=1, sticky=N, columnspan=5)
+if scheduleEnabled == True:
+	weatherhead = Label(win,text='Current Conditions', font=myFont, bg='black', fg='white').grid(row=9,column=1, sticky=N, columnspan=2)
+	weatherstat = Label(win,textvariable=Weatherf, font=weatherFont, bg='black', fg='white', wraplength=230).grid(row=10,column=1, sticky=N, columnspan=2, rowspan=2)
+
+	schedulehead = Label(win,text='Schedule', font=myFont, bg='black', fg='white').grid(row=9,column=4, sticky=N, columnspan=2)
+	schedulestat = Label(win,textvariable=scheduleStatf, font=scheduleFont, bg='black', fg='white', wraplength=200).grid(row=10,column=4, sticky=N, columnspan=2)
+	scheddis     = Button(win, text='', textvariable=scheddisF, font=scheduleFont, command=disSched, height=1, width=2, bg='black', fg='white').grid(row=11, column=4, sticky=W)
+	schedcon     = Button(win, text='config',  font=scheduleFont, command=confSched, height=1, width=2, bg='black', fg='white').grid(row=11, column=5, sticky=E)
+else:
+	weatherhead = Label(win,text='Current Conditions', font=myFont, bg='black', fg='white').grid(row=9, column=1, sticky=N, columnspan=5)
+	weatherstat = Label(win,textvariable=Weatherf, font=weatherFont, bg='black', fg='white', wraplength=350).grid(row=10, column=1, sticky=N, columnspan=5, rowspan=2)
 
 (mode,targetTemp) = getStat()
 newmode.set(mode)
