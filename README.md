@@ -6,6 +6,8 @@ This project is a fork of Rubustat (info below)
 
 ##Modifications
 
+* Work is in progress on scheduling - beware
+
 * Added support for heat pumps.
 	This requires 4 devices to control cool, fan, reversing valve, and emergency heat
 
