@@ -13,6 +13,9 @@ DEBUG = 0
 active_hysteresis = 
 inactive_hysteresis = 
 
+# C or F
+SCALE = F
+
 # GPIO Output config
 # If you want to activate on GPIO_HIGH:
 #PIN_OFF = 0

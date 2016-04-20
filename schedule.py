@@ -19,12 +19,22 @@ class schedule():
 	schedules = []
 
 	def __init__(self):
+		scconn = sqlite3.connect("schedule.db")
+		c = scconn.cursor()
+		c.execute('CREATE TABLE IF NOT EXISTS schedule (name TEXT, startday INT, start TIMESTAMP, endday INT, end TIMESTAMP, low FLOAT, high FLOAT)')
+		#c.execute('INSERT INTO schedule VALUES(?,?,?,?,?,?,?)', ('Away',   1,'06:30:00',1,'17:00:00',65.0,77.0))
+		#c.execute('INSERT INTO schedule VALUES(?,?,?,?,?,?,?)', ('Home',   1,'17:00:00',1,'23:30:00',67.0,74.0))
+		#c.execute('INSERT INTO schedule VALUES(?,?,?,?,?,?,?)', ('Night',  1,'23:30:00',1,'04:30:00',66.0,75.0))
+		#c.execute('INSERT INTO schedule VALUES(?,?,?,?,?,?,?)', ('Weekend',6,'23:30:00',0,'04:30:00',66.0,75.0))
+		#scconn.commit()
+		scconn.close()
+
 		self.read_schedule()
 		#self.set_current()
 
 	def read_schedule(self):
-		conn = sqlite3.connect("schedule.db")
-		c = conn.cursor()
+		scconn = sqlite3.connect("schedule.db")
+		c = scconn.cursor()
 
 		i = 0
 		for row in c.execute('SELECT name,startday,start,endday,end,low,high FROM schedule'):
@@ -34,11 +44,11 @@ class schedule():
 			self.schedules.extend({row})
 			i = i + 1
 
-		conn.close()
+		scconn.close()
 
 	def get_one(self,name):
-		conn = sqlite3.connect("schedule.db")
-		c = conn.cursor()
+		scconn = sqlite3.connect("schedule.db")
+		c = scconn.cursor()
 		for row in c.execute("SELECT name,startday,start,endday,end,low,high FROM schedule WHERE name='" + name + "'"):
 			startday = row[1]
 			start    = row[2] 
@@ -46,7 +56,7 @@ class schedule():
 			end      = row[4]
 			low      = row[5]
 			high     = row[6]
-		conn.close()
+		scconn.close()
 		return (name,startday,start,endday,end,low,high)
 
 	def print_schedule(self):
