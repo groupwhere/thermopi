@@ -120,6 +120,17 @@ p#fanOn{
     font-size: 14pt;
     font-weight:bold;
 }
+p#schedOn{
+    color:#888888;
+    font-size: 14pt;
+    font-weight:bold;
+}
+p#schedDetail{
+    color:#000000;
+    font-size: 14pt;
+    font-weight:bold;
+}
+
 /*the crazy switch bit*/
 
 .onoffswitch {

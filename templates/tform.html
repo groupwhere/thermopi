@@ -27,8 +27,8 @@ window.setInterval(function(){
 <script>
 function updateWhatsOn() {
 
-	$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-	$.ajax({
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    $.ajax({
     url : $SCRIPT_ROOT + "/_liveWhatsOn",
     success : function(result){
         $('#whatsOnSpan').html(result);
@@ -42,10 +42,44 @@ window.setInterval(function(){
 </script>
 
 <script>
+function updateSched() {
+
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    $.ajax({
+    url : $SCRIPT_ROOT + "/_liveSched",
+    success : function(result){
+        $('#activeSchedSpan').html(result);
+    }
+})
+};
+
+window.setInterval(function(){
+  updateSched()
+}, 10000);
+</script>
+
+<script>
+function updateSchedDetail() {
+
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    $.ajax({
+    url : $SCRIPT_ROOT + "/_liveSchedDetail",
+    success : function(result){
+        $('#activeSchedDetailSpan').html(result);
+    }
+})
+};
+
+window.setInterval(function(){
+  updateSchedDetail()
+}, 10000);
+</script>
+
+<script>
 function updateDaemonStatus() {
 
-	$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-	$.ajax({
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    $.ajax({
     url : $SCRIPT_ROOT + "/_liveDaemonStatus",
     success : function(result){
         $('#daemonStatusSpan').html(result);
@@ -137,6 +171,8 @@ window.setInterval(function(){
 				<br>
 				<span id="daemonStatusSpan"></span>
 				<span id="whatsOnSpan"></span>
+				<span id="activeSchedSpan"></span>
+				<span id="activeSchedDetailSpan"></span>
 				<br>
 
 				</center>
