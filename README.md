@@ -1,6 +1,6 @@
 Thermopi
 ========
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=uVPUQVSZUKLUahfCEybxPoZXVyPxbCUY)
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=g1nprvE12Xw0TmtTKHA5hhbtg7YEcs92)
 
 ![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=JSnFM7Qca60TKj5NHdG2WfeuK8zZUNMH)
 
