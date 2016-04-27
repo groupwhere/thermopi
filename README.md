@@ -1,12 +1,20 @@
 Thermopi
 ========
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=cGZ4eZld1SE9d3kJrn64idYI86VRcez3)
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=uVPUQVSZUKLUahfCEybxPoZXVyPxbCUY)
+
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=JSnFM7Qca60TKj5NHdG2WfeuK8zZUNMH)
+
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=4RLIn6IQX2C5fbSumfh0O727LNQjkZEN)
+
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=nthwG4cLYCnXzwnOPOj9IPxotgp4o8Ob)
+
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=mL9jzHtGQyOSQEZZA9eogaOHuvOmklzA)
 
 This project is a fork of Rubustat (info below)
 
 ##Modifications
 
-* Work is in progress on scheduling - beware
+* Work is in progress on scheduling although the gui menus are somewhat working - beware
 
 * Added support for heat pumps.
 	This requires 4 devices to control cool, fan, reversing valve, and emergency heat
