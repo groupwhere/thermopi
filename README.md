@@ -34,7 +34,7 @@ This project is a fork of Rubustat (info below)
 	I use a JBtek 4 Channel DC 5V Relay Module which has active low inputs.  The relays are SPDT, but the goal was to ensure no power draw was required to keep them off, e.g. if the program or the Pi itself were to fail.
 
 Relay board:
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=S9qTYs0T0UCTNMc27AynCOMkOJwQV6mu)
+![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=oYaGEmaoJ0FCzOYhxy1AXTvMdow5VKNd)
 
 ##Basic setup
 
