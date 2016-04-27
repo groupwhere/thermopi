@@ -376,6 +376,17 @@ class thermoGUI:
         self.listset.configure(width=450)
         self.listset.lower(self.mainframe)
 
+        # Create a frame for the add setting page and then lower it out of the way
+        self.addset = Frame(top)
+        self.addset.place(relx=0.040, rely=0.060, relheight=0.89, relwidth=0.92)
+        self.addset.configure(relief=GROOVE)
+        self.addset.configure(borderwidth="2")
+        self.addset.configure(relief=GROOVE)
+        self.addset.configure(takefocus="1")
+        self.addset.configure(background="#000000")
+        self.addset.configure(width=435)
+        self.addset.lower(self.mainframe)
+
         # Create a frame for the edit schedule page and then lower it out of the way
         self.editset = Frame(top)
         self.editset.place(relx=0.040, rely=0.060, relheight=0.89, relwidth=0.92)
@@ -615,28 +626,28 @@ humidity''')
         self.goButton.configure(command=self.setstat)
 
         self.dectnhButton = Button(self.mainframe)
-        self.dectnhButton.place(relx=0.43, rely=0.48, height=30, width=46)
+        self.dectnhButton.place(relx=0.53, rely=0.48, height=30, width=46)
         self.dectnhButton.configure(activebackground="#d9d9d9")
         self.dectnhButton.configure(font=self.font14)
         self.dectnhButton.configure(text='-1')
         self.dectnhButton.configure(command=self.decr)
 
         self.deconeButton = Button(self.mainframe)
-        self.deconeButton.place(relx=0.53, rely=0.48, height=30, width=46)
+        self.deconeButton.place(relx=0.63, rely=0.48, height=30, width=46)
         self.deconeButton.configure(activebackground="#d9d9d9")
         self.deconeButton.configure(font=self.font14)
         self.deconeButton.configure(text='<')
         self.deconeButton.configure(command=self.decrtnh)
 
         self.inctnhButton = Button(self.mainframe)
-        self.inctnhButton.place(relx=0.63, rely=0.48, height=30, width=46)
+        self.inctnhButton.place(relx=0.73, rely=0.48, height=30, width=46)
         self.inctnhButton.configure(activebackground="#d9d9d9")
         self.inctnhButton.configure(font=self.font14)
         self.inctnhButton.configure(text='>')
         self.inctnhButton.configure(command=self.incrtnh)
 
         self.inconeButton = Button(self.mainframe)
-        self.inconeButton.place(relx=0.73, rely=0.48, height=30, width=46)
+        self.inconeButton.place(relx=0.83, rely=0.48, height=30, width=46)
         self.inconeButton.configure(activebackground="#d9d9d9")
         self.inconeButton.configure(font=self.font14)
         self.inconeButton.configure(text='+1')
@@ -711,11 +722,26 @@ humidity''')
             self.weatherstat.configure(wraplength=230)
 
         ''' Below for confSched() '''
-        self.sethead   = Label(self.listset,text='Settings', font=self.font12, bg='black', fg='white').grid(row=0,column=0, sticky=N, columnspan=5)
-        self.setnamel  = Label(self.listset,text='Setting Name', font=self.scheduleFont, bg='black', fg='white').grid(row=2,column=0, sticky=N)
-        self.setlowl   = Label(self.listset,text='Low Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=2,column=1, sticky=N)
-        self.sethighl  = Label(self.listset,text='High Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=2,column=2, sticky=N)
-        self.calendarl = Label(self.listset,text='', font=self.scheduleFont, bg='black', fg='white').grid(row=2,column=3, sticky=N)
+        self.sethead = Label(self.listset,text='Settings', font=self.font14, bg='black', fg='white')
+        self.sethead.place(relx=0.3, rely=0.05, height=25, width=150)
+
+        self.setnamel = Label(self.listset, font=self.font12, bg='black', fg='white')
+        self.setnamel.configure(text='''Setting
+Name''')
+        self.setnamel.place(relx=0.05, rely=0.2, height=35, width=90)
+
+        self.setlowl = Label(self.listset, font=self.font12, bg='black', fg='white')
+        self.setlowl.configure(text='''Low
+Temp''')
+        self.setlowl.place(relx=0.30, rely=0.2, height=35, width=50)
+
+        self.sethighl = Label(self.listset, font=self.font12, bg='black', fg='white')
+        self.sethighl.configure(text='''High
+Temp''')
+        self.sethighl.place(relx=0.45, rely=0.2, height=35, width=50)
+
+        #self.calendarl = Label(self.listset,text='', font=self.scheduleFont, bg='black', fg='white')
+        #self.calendarl.place(relx=0.05, rely=0.1, height=25, width=150)
 
         ''' Below for editSetting() '''
         namel = Label(self.editset)
@@ -1384,6 +1410,10 @@ humidity''')
             #(u'Home', 67.0, 74.0)
             #(u'Night', 66.0, 75.0)
             #(u'Weekend', 66.0, 75.0)
+
+            row = float(i * 0.1) + 0.07
+            #row = float(i * 0.05) + 0.1
+
             name = str(itemgetter(0)(schedule))
             low  = str(itemgetter(1)(schedule))
             high = str(itemgetter(2)(schedule))
@@ -1391,9 +1421,11 @@ humidity''')
             deleteme    = partial(self.deleteSetting,name)
             overrideme  = partial(self.activateSetting,name)
             delete_button = Button(self.listset, text='Delete', command=deleteme)
-            delete_button.grid(row=i, rowspan=1, column=4, sticky=N)
+            delete_button.place(relx=0.73, rely=row, height=25, width=50)
+
             active_button = Button(self.listset, text='Use', command=overrideme)
-            active_button.grid(row=i, rowspan=1, column=5, sticky=N)
+            #active_button.grid(row=i, rowspan=1, column=5, sticky=N)
+            active_button.place(relx=0.85, rely=row, height=25, width=50)
 
             fgcolor = 'black'
             if len(guischedule.current) > 1:
@@ -1409,18 +1441,37 @@ humidity''')
             lowf.set(low)
             highf.set(high)
 
-            name_entry = Label(self.listset, width=10, fg=fgcolor, textvariable=namef).grid(row=i, rowspan=1, column=0, sticky=N)
-            low_entry  = Label(self.listset, width=4, fg=fgcolor, textvariable=lowf).grid(row=i, rowspan=1, column=1, sticky=N)
-            high_entry = Label(self.listset, width=4, fg=fgcolor, textvariable=highf).grid(row=i, rowspan=1, column=2, sticky=N)
+            name_entry = Label(self.listset, width=10, fg=fgcolor, textvariable=namef)
+            name_entry.place(relx=0.05, rely=row, height=25, width=90)
+            low_entry  = Label(self.listset, width=4, fg=fgcolor, textvariable=lowf)
+            low_entry.place(relx=0.30, rely=row, height=25, width=50)
+            high_entry = Label(self.listset, width=4, fg=fgcolor, textvariable=highf)
+            high_entry.place(relx=0.45, rely=row, height=25, width=50)
             editme = partial(self.editSetting,name)
-            edit_button = Button(self.listset, text='Edit', command=editme).grid(row=i, rowspan=1, column=3, sticky=N)
+            edit_button = Button(self.listset, text='Edit', command=editme)
+            edit_button.place(relx=0.60, rely=row, height=25, width=50)
             i = i + 1
 
         brow = i + 1
         # Until we get an on-screen keyboard, it doesn't make sense to open a dialog requiring keyboard input on a touch screen (Setting name)
-        abutton = Button(self.listset, text='Add', command=self.addSetting).grid(row=brow, rowspan=1, column=2,sticky=N)
+        abutton = Button(self.listset, text='Add', command=self.addSetting)
+        abutton.place(relx=0.3, rely=0.9, height=25, width=68)
+        abutton.configure(activebackground="white")
+        abutton.configure(background="black")
+        abutton.configure(disabledforeground="white")
+        abutton.configure(font=self.font12)
+        abutton.configure(foreground="white")
+        abutton.configure(highlightbackground="white")
+
         lowerme = partial(self.listset.lower,self.mainframe)
-        cbutton = Button(self.listset, text='Close', command=lowerme).grid(row=brow, rowspan=1, column=3,sticky=N)
+        cbutton = Button(self.listset, text='Close', command=lowerme)
+        cbutton.configure(activebackground="white")
+        cbutton.configure(background="black")
+        cbutton.configure(disabledforeground="white")
+        cbutton.configure(font=self.font12)
+        cbutton.configure(foreground="white")
+        cbutton.configure(highlightbackground="white")
+        cbutton.place(relx=0.50, rely=0.9, height=25, width=68)
 
     def activateSetting(self,name):
         print "ACTIVATE/OVERRIDE: " + name
@@ -1513,41 +1564,46 @@ humidity''')
         res = guischedule.del_setting(name)
 
     def addSetting(self):
-        addset = Toplevel(win,bg='black',bd=4,relief=RIDGE)
-        addset.title('Creating a new setting')
-        addset.geometry('300x140+40+40')
-        addset.overrideredirect(1)
-        #addset.lift(aboveThis=win)
-        addset.wm_attributes('-topmost',1)
-        addset.focus()
+        self.addset.lift(self.listset)
+#        addset = Toplevel(win,bg='black',bd=4,relief=RIDGE)
+#        addset.title('Creating a new setting')
+#        addset.geometry('300x140+40+40')
+#        addset.overrideredirect(1)
+#        addset.wm_attributes('-topmost',1)
+#        addset.focus()
 
-        namel = Label(addset,text='Setting Name', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=0, sticky=N)
-        lowl  = Label(addset,text='Low Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=1, sticky=N)
-        highl = Label(addset,text='High Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=2, sticky=N)
+        namel = Label(self.addset,text='Setting Name', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=0, sticky=N)
+        lowl  = Label(self.addset,text='Low Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=1, sticky=N)
+        highl = Label(self.addset,text='High Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=2, sticky=N)
 
-        name_entry = Entry(addset, width=10, textvariable=self.nnamef).grid(row=1, rowspan=1, column=0, sticky=N)
-        low_entry  = Entry(addset, width=4, textvariable=self.nlowf).grid(row=1, rowspan=1, column=1, sticky=N)
-        high_entry = Entry(addset, width=4, textvariable=self.nhighf).grid(row=1, rowspan=1, column=2, sticky=N)
+        self.name_entry = Entry(self.addset, width=10, textvariable=self.nnamef).grid(row=1, rowspan=1, column=0, sticky=N)
+        self.low_entry  = Entry(self.addset, width=4, textvariable=self.nlowf).grid(row=1, rowspan=1, column=1, sticky=N)
+        self.high_entry = Entry(self.addset, width=4, textvariable=self.nhighf).grid(row=1, rowspan=1, column=2, sticky=N)
 
-        savenew = partial(saveSetting,True)
-        sbutton = Button(addset, text='Save', command=savenew).grid(row=2, rowspan=1, column=1,sticky=N)
-        cbutton = Button(addset, text='Close', command=addset.destroy).grid(row=2, rowspan=1, column=2,sticky=N)
+        savenew = partial(self.saveSetting,True)
+        lowerme = partial(self.addset.lower,self.mainframe)
+        sbutton = Button(self.addset, text='Save', command=savenew).grid(row=2, rowspan=1, column=1,sticky=N)
+        cbutton = Button(self.addset, text='Close', command=lowerme).grid(row=2, rowspan=1, column=2,sticky=N)
 
     def saveSetting(self,new):
-        #if new == True then it's a new one, otherwise an edit
         setting = (self.nnamef.get(),self.nlowf.get(),self.nhighf.get())
-        start = { 0 : [], 1 : [], 2 : [], 3 : {}, 4 : [], 5 : [], 6 : []}
-        end   = { 0 : [], 1 : [], 2 : [], 3 : {}, 4 : [], 5 : [], 6 : []}
 
-        for i in range(0,len(self.startf)):
-            #print self.startf[i].get()
-            start[i] = self.startf[i].get()
-        for i in range(0,len(self.endf)):
-            #print self.endf[i].get()
-            end[i] = self.endf[i].get()
-        #print start
-        #print end
-        res = guischedule.save_schedule(setting,new,start,end)
+        #if new == True then it's a new one, otherwise an edit
+        if new == True:
+            res = guischedule.save_setting(setting,new)
+        else:
+            start = { 0 : [], 1 : [], 2 : [], 3 : {}, 4 : [], 5 : [], 6 : []}
+            end   = { 0 : [], 1 : [], 2 : [], 3 : {}, 4 : [], 5 : [], 6 : []}
+
+            for i in range(0,len(self.startf)):
+                #print self.startf[i].get()
+                start[i] = self.startf[i].get()
+            for i in range(0,len(self.endf)):
+                #print self.endf[i].get()
+                end[i] = self.endf[i].get()
+            #print start
+            #print end
+            res = guischedule.save_schedule(setting,new,start,end)
 
 
 # END thermoGUI class
