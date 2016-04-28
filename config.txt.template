@@ -75,3 +75,5 @@ STATE =
 # Wunderground API code - apply at https://www.wunderground.com/weather/api/
 WUNDERGROUND = 
 
+[schedule]
+enabled = 0
