@@ -17,7 +17,7 @@ from functools import partial
 
 # Thermo sensors
 from getIndoorTemp import getIndoorTemp
-import Adafruit_DHT
+#import Adafruit_DHT
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -28,6 +28,7 @@ config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
 ZIP = config.get('weather','ZIP')
 STATE = config.get('weather','STATE')
+GPIO = int(config.get('main','GPIO'))
 HEATER_PIN = int(config.get('main','HEATER_PIN'))
 AC_PIN = int(config.get('main','AC_PIN'))
 OB_PIN = int(config.get('main','OB_PIN'))
@@ -125,6 +126,9 @@ if scheduleEnabled == True:
 def getWhatsOn():
     if DEBUG == 1:
         print "Called getWhatsOn\n"
+    if GPIO == False:
+        print "NO GPIO"
+        return (0,0,0,0)
     if PIN_ON == 1:
         obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
         heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -721,6 +725,43 @@ humidity''')
             self.weatherstat.configure(fg='white')
             self.weatherstat.configure(wraplength=230)
 
+        elif scheduleEnabled == True:
+            self.schedulehead = Label(self.mainframe)
+            self.schedulehead.place(relx=0.58, rely=0.60, height=22, width=154)
+            self.schedulehead.configure(text='''Schedule''')
+            self.schedulehead.configure(font=self.font12)
+            self.schedulehead.configure(bg='black')
+            self.schedulehead.configure(fg='white')
+
+            self.schedulestat = Label(self.mainframe)
+            self.schedulestat.place(relx=0.55, rely=0.68, height=60, width=200)
+            self.schedulestat.configure(textvariable=self.scheduleStatf)
+            self.schedulestat.configure(font=self.scheduleFont)
+            self.schedulestat.configure(bg='black')
+            self.schedulestat.configure(fg='white')
+            self.schedulestat.configure(wraplength=200)
+
+            self.scheddis = Button(self.mainframe)
+            self.scheddis.place(relx=0.58, rely=0.90, height=30, width=60)
+            self.scheddis.configure(text='')
+            self.scheddis.configure(textvariable=self.scheddisF)
+            self.scheddis.configure(font=self.scheduleFont)
+            self.scheddis.configure(command=self.disSched)
+            self.scheddis.configure(height=1)
+            self.scheddis.configure(width=2)
+            self.scheddis.configure(bg='black')
+            self.scheddis.configure(fg='white')
+
+            self.schedcon = Button(self.mainframe)
+            self.schedcon.place(relx=0.80, rely=0.90, height=30, width=60)
+            self.schedcon.configure(text='config')
+            self.schedcon.configure(font=self.scheduleFont)
+            self.schedcon.configure(command=self.confSched)
+            self.schedcon.configure(height=1)
+            self.schedcon.configure(width=2)
+            self.schedcon.configure(bg='black')
+            self.schedcon.configure(fg='white')
+
         ''' Below for confSched() '''
         self.sethead = Label(self.listset,text='Settings', font=self.font14, bg='black', fg='white')
         self.sethead.place(relx=0.3, rely=0.05, height=25, width=150)
@@ -728,17 +769,17 @@ humidity''')
         self.setnamel = Label(self.listset, font=self.font12, bg='black', fg='white')
         self.setnamel.configure(text='''Setting
 Name''')
-        self.setnamel.place(relx=0.05, rely=0.2, height=35, width=90)
+        self.setnamel.place(relx=0.05, rely=0.15, height=35, width=90)
 
         self.setlowl = Label(self.listset, font=self.font12, bg='black', fg='white')
         self.setlowl.configure(text='''Low
 Temp''')
-        self.setlowl.place(relx=0.30, rely=0.2, height=35, width=50)
+        self.setlowl.place(relx=0.30, rely=0.15, height=40, width=50)
 
         self.sethighl = Label(self.listset, font=self.font12, bg='black', fg='white')
         self.sethighl.configure(text='''High
 Temp''')
-        self.sethighl.place(relx=0.45, rely=0.2, height=35, width=50)
+        self.sethighl.place(relx=0.45, rely=0.15, height=40, width=50)
 
         #self.calendarl = Label(self.listset,text='', font=self.scheduleFont, bg='black', fg='white')
         #self.calendarl.place(relx=0.05, rely=0.1, height=25, width=150)
@@ -1100,7 +1141,11 @@ Temp''')
             print "coolStringf: " + self.coolStringf.get()
             print "fanStringf:  " + self.fanStringf.get()
 
-        weatherstring = getWeather()
+        if weatherEnabled == True:
+            weatherstring = getWeather()
+        else:
+            weatherstring = 'No weather available'
+
         self.Weatherf.set(weatherstring)
         if scheduleEnabled == True:
             (mode,target) = getStat()
@@ -1403,7 +1448,7 @@ Temp''')
 
         self.listset.lift(self.mainframe)
 
-        i = 3
+        i = 2
         for schedule in guischedule.settings:
             #print schedule
             #(u'Away', 65.0, 77.0)
@@ -1411,7 +1456,7 @@ Temp''')
             #(u'Night', 66.0, 75.0)
             #(u'Weekend', 66.0, 75.0)
 
-            row = float(i * 0.1) + 0.07
+            row = float(i * 0.1) + 0.1
             #row = float(i * 0.05) + 0.1
 
             name = str(itemgetter(0)(schedule))
@@ -1565,25 +1610,28 @@ Temp''')
 
     def addSetting(self):
         self.addset.lift(self.listset)
-#        addset = Toplevel(win,bg='black',bd=4,relief=RIDGE)
-#        addset.title('Creating a new setting')
-#        addset.geometry('300x140+40+40')
-#        addset.overrideredirect(1)
-#        addset.wm_attributes('-topmost',1)
-#        addset.focus()
 
-        namel = Label(self.addset,text='Setting Name', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=0, sticky=N)
-        lowl  = Label(self.addset,text='Low Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=1, sticky=N)
-        highl = Label(self.addset,text='High Temp', font=self.scheduleFont, bg='black', fg='white').grid(row=0,column=2, sticky=N)
+        namel = Label(self.addset,text='Setting Name', font=self.font12, bg='black', fg='white')
+        namel.place(relx=0.1, rely=0.1, height=25, width=150)
+        lowl  = Label(self.addset,text='Low Temp', font=self.font12, bg='black', fg='white')
+        lowl.place(relx=0.5, rely=0.1, height=25, width=75)
+        highl = Label(self.addset,text='High Temp', font=self.font12, bg='black', fg='white')
+        highl.place(relx=0.7, rely=0.1, height=25, width=75)
 
-        self.name_entry = Entry(self.addset, width=10, textvariable=self.nnamef).grid(row=1, rowspan=1, column=0, sticky=N)
-        self.low_entry  = Entry(self.addset, width=4, textvariable=self.nlowf).grid(row=1, rowspan=1, column=1, sticky=N)
-        self.high_entry = Entry(self.addset, width=4, textvariable=self.nhighf).grid(row=1, rowspan=1, column=2, sticky=N)
+        self.name_entry = Entry(self.addset, font=self.font12, textvariable=self.nnamef, text='')
+        self.name_entry.place(relx=0.1, rely=0.2, height=25, width=150)
+        self.low_entry  = Entry(self.addset, font=self.font12, textvariable=self.nlowf, text='')
+        self.low_entry.place(relx=0.5, rely=0.2, height=25, width=75)
+        self.high_entry = Entry(self.addset, font=self.font12, textvariable=self.nhighf, text='')
+        self.high_entry.place(relx=0.7, rely=0.2, height=25, width=75)
 
         savenew = partial(self.saveSetting,True)
+        sbutton = Button(self.addset, text='Save', command=savenew)
+        sbutton.place(relx=0.4, rely=0.8, height=25, width=68)
+
         lowerme = partial(self.addset.lower,self.mainframe)
-        sbutton = Button(self.addset, text='Save', command=savenew).grid(row=2, rowspan=1, column=1,sticky=N)
-        cbutton = Button(self.addset, text='Close', command=lowerme).grid(row=2, rowspan=1, column=2,sticky=N)
+        cbutton = Button(self.addset, text='Close', command=lowerme)
+        cbutton.place(relx=0.55, rely=0.8, height=25, width=68)
 
     def saveSetting(self,new):
         setting = (self.nnamef.get(),self.nlowf.get(),self.nhighf.get())

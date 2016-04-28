@@ -3,6 +3,9 @@
 #dictates logging
 DEBUG = 0
 
+# Use GPIO - only off for demo runs without GPIO
+GPIO = 1
+
 #These two are difficult to explain.
 #Let's say we want it to be 75, and it's in cooling mode.
 #if the active_hysteresis is 0.5, it will cool to 74.5 before shutting off.
