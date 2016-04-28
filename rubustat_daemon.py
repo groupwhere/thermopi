@@ -15,7 +15,6 @@ from threading import Timer
 from operator import itemgetter
 
 import sqlite3
-import Adafruit_DHT
 from schedule import schedule
 
 #set working directory to where "rubustat_daemon.py" is
@@ -52,6 +51,9 @@ scheduleEnabled = config.getboolean('schedule','enabled')
 # Adafruit DHT11 and others
 sensor_type = config.get('main','sensor_type')
 sensor_pin  = int(config.get('main','sensor_pin'))
+
+if sensor_type == 'DHT_11':
+    import Adafruit_DHT
 
 #mail config
 mailEnabled = config.getboolean('mail', 'enabled')

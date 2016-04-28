@@ -58,6 +58,8 @@ Relay board:
 		@openbox
 		@sudo python /root/thermopi/thermogui.py
 
+5. If using the DHT11 sensor, checkout/clone https://github.com/adafruit/Adafruit_Python_DHT.git
+
 The daemon can be started with `python rubustat_daemon.py start.`
 
 First run of, e.g., `python thermogui.py` will also start the daemon.
