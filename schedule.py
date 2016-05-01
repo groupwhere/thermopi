@@ -62,7 +62,8 @@ class schedule():
             c.execute('INSERT INTO schedule VALUES(?,?,?,?,?)', ('Night',  2,'23:30:00',3,'04:30:00'))
             c.execute('INSERT INTO schedule VALUES(?,?,?,?,?)', ('Night',  3,'23:30:00',4,'04:30:00'))
             c.execute('INSERT INTO schedule VALUES(?,?,?,?,?)', ('Night',  4,'23:30:00',5,'04:30:00'))
-            c.execute('INSERT INTO schedule VALUES(?,?,?,?,?)', ('Weekend',5,'04:30:00',6,'23:30:00'))
+            c.execute('INSERT INTO schedule VALUES(?,?,?,?,?)', ('Weekend',5,'04:30:00',-1,''))
+            c.execute('INSERT INTO schedule VALUES(?,?,?,?,?)', ('Weekend',-1,'',6,'23:30:00'))
             scconn.commit()
         scconn.close()
 
@@ -158,9 +159,13 @@ class schedule():
                 elif start[i] == 'X' or start[i] == '':
                     startday = -1
                     start[i] = ''
+                    if len(end[i]) < 8:
+                        end[i] = end[i] + ':00'
                 elif end[i] == 'X' or end[i] == '':
                     endday = -1
                     end[i] = ''
+                    if len(start[i]) < 8:
+                        start[i] = start[i] + ':00'
                 else:
                     if len(start[i]) < 8:
                         start[i] = start[i] + ':00'
