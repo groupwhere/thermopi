@@ -22,6 +22,7 @@ def vp_start_gui():
     '''Starting point when module is the main routine.'''
     global val, w, root
     root = Tk()
+    root.config(cursor='none')
     # Production - no title bar
     #root.overrideredirect(1)
     top = thermoGUI(root)
@@ -1055,8 +1056,16 @@ Temp''')
     # Show and update the time adjust window
     def timeAdj(self, start, end, name, typeof, startonly=False, endonly=False, index=0):
         self.timeset.lift(self.editset)
-        (shourin,sminin) = str.split(start, ':')
-        (ehourin,eminin) = str.split(end, ':')
+        if start is str:
+            (shourin,sminin) = str.split(start, ':')
+        else:
+            shourin = ''
+            sminin = ''
+        if end is str:
+            (ehourin,eminin) = str.split(end, ':')
+        else:
+            ehourin = ''
+            eminin = ''
 
         if DEBUG > 0:
             print "timeAdj()"
@@ -1193,7 +1202,8 @@ Temp''')
 
     # FIXME
     def saveTemp(self):
-        print "saveTemp()"
+        if DEBUG > 0:
+            print "saveTemp()"
         self.nlowf.set(self.lowtemp.get())
         self.nhighf.set(self.hightemp.get())
 
@@ -1275,7 +1285,8 @@ Temp''')
         cbutton.place(relx=0.50, rely=0.9, height=25, width=68)
 
     def activateSetting(self,name):
-        print "ACTIVATE/OVERRIDE: " + name
+        if DEBUG > 0:
+            print "ACTIVATE/OVERRIDE: " + name
         res = guischedule.hold(name)
 
     # Edit a named schedule setting including schedules for the setting
@@ -1291,14 +1302,26 @@ Temp''')
         self.endf = []
 
         for k in caldays['week']:
-            cd = Button(cal_entry,text=k,width=1,fg='black',bg='gray',command=lambda k=k: self.attach_btn(k,i))
+            cd = Button(cal_entry,text=k,width=1,fg='black',bg='gray',command=lambda j=i,k=k: self.attach_btn(k,j))
 
             myschedule = guischedule.get_one_day(name,i)
             if len(myschedule) > 0:
-                startday = int(itemgetter(1)(myschedule))
-                start    = str(itemgetter(2)(myschedule))[:5]
-                endday   = int(itemgetter(3)(myschedule))
-                end      = str(itemgetter(4)(myschedule))[:5]
+                if itemgetter(1)(myschedule) is not None:
+                    startday = int(itemgetter(1)(myschedule))
+                else:
+                    startday = i
+                if itemgetter(2)(myschedule) is not None:
+                    start    = str(itemgetter(2)(myschedule))[:5]
+                else:
+                    start = ''
+                if itemgetter(3)(myschedule) is not None:
+                    endday   = int(itemgetter(3)(myschedule))
+                else:
+                    endday = i
+                if itemgetter(4)(myschedule) is not None:
+                    end      = str(itemgetter(4)(myschedule))[:5]
+                else:
+                    end = ''
                 self.startf.append(StringVar())
                 self.endf.append(StringVar())
                 self.startf[i].set(start)
@@ -1307,7 +1330,8 @@ Temp''')
                 calltimes = partial(self.timeAdj, start, end, name, 'scheduled setting',True,False, i)
                 calltimee = partial(self.timeAdj, start, end, name, 'scheduled setting',False,True, i)
 
-                print "Setting up button for " + str(startday) + " at " + start + ", " + str(endday) + " at " + end
+                if DEBUG > 0:
+                    print "Setting up button for " + str(startday) + " at " + start + ", " + str(endday) + " at " + end
                 if startday == i and endday == i:
                     # Starts and ends this day
                     #cd.configure(state=ACTIVE)
@@ -1359,7 +1383,11 @@ Temp''')
 
     def attach_btn(self,k,i):
 #        self.setday.append(k)
+        print i
         print k
+        self.startf[i].set('X')
+        self.endf[i].set('X')
+        print "Disabled " + k
 
     def deleteSetting(self,name):
         res = guischedule.del_setting(name)
@@ -1370,16 +1398,20 @@ Temp''')
         namel = Label(self.addset,text='Setting Name', font=self.font12, bg='black', fg='white')
         namel.place(relx=0.1, rely=0.1, height=25, width=150)
         lowl  = Label(self.addset,text='Low Temp', font=self.font12, bg='black', fg='white')
-        lowl.place(relx=0.5, rely=0.1, height=25, width=75)
+        lowl.place(relx=0.5, rely=0.1, height=25, width=85)
         highl = Label(self.addset,text='High Temp', font=self.font12, bg='black', fg='white')
-        highl.place(relx=0.7, rely=0.1, height=25, width=75)
+        highl.place(relx=0.7, rely=0.1, height=25, width=85)
+
+        self.nnamef.set('')
+        self.nlowf.set('')
+        self.nhighf.set('')
 
         self.name_entry = Entry(self.addset, font=self.font12, textvariable=self.nnamef, text='')
         self.name_entry.place(relx=0.1, rely=0.2, height=25, width=150)
         self.low_entry  = Entry(self.addset, font=self.font12, textvariable=self.nlowf, text='')
-        self.low_entry.place(relx=0.5, rely=0.2, height=25, width=75)
+        self.low_entry.place(relx=0.5, rely=0.2, height=25, width=85)
         self.high_entry = Entry(self.addset, font=self.font12, textvariable=self.nhighf, text='')
-        self.high_entry.place(relx=0.7, rely=0.2, height=25, width=75)
+        self.high_entry.place(relx=0.7, rely=0.2, height=25, width=85)
 
         savenew = partial(self.saveSetting,True)
         sbutton = Button(self.addset, text='Save', command=savenew)
@@ -1400,15 +1432,16 @@ Temp''')
             end   = { 0 : [], 1 : [], 2 : [], 3 : {}, 4 : [], 5 : [], 6 : []}
 
             for i in range(0,len(self.startf)):
-                #print self.startf[i].get()
-                start[i] = self.startf[i].get()
+                print self.startf[i].get()
+                start[i] = self.startf[i].get()# + ':00'
             for i in range(0,len(self.endf)):
-                #print self.endf[i].get()
-                end[i] = self.endf[i].get()
+                print self.endf[i].get()
+                end[i] = self.endf[i].get()# + ':00'
             #print start
             #print end
             res = guischedule.save_schedule(setting,new,start,end)
 
+        self.editset.lower(self.mainframe)
 # END thermoGUI class
 
 if __name__ == '__main__':

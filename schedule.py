@@ -92,6 +92,7 @@ class schedule():
         scconn = sqlite3.connect("schedule.db")
         c = scconn.cursor()
         c.execute("DELETE FROM settings WHERE sename=?", (name,))
+        c.execute("DELETE FROM schedule WHERE scname=?", (name,))
         scconn.commit()
         scconn.close()
         self.read_schedule()
@@ -118,32 +119,64 @@ class schedule():
         # start {0: '17:00', 1: '17:00', 2: '17:00', 3: '17:00', 4: '17:00', 5: [], 6: []}
         # end {0: '23:30', 1: '23:30', 2: '23:30', 3: '23:30', 4: '23:30', 5: [], 6: []}
 
-        print setting
-        print start
-        print end
-
+        if DEBUG > 0:
+            print setting
+            print start
+            print end
+#(u'Away', '65.0', '77.0')
+#{0: '06:30', 1: '06:30', 2: '06:30', 3: '06:30', 4: '06:30', 5: '02:00', 6: '02:00'}
+#{0: '17:00', 1: '17:00', 2: '17:00', 3: '17:00', 4: '17:30', 5: '03:00', 6: ''}
         if setting[0] and setting[1] and setting[2]:
             scconn = sqlite3.connect("schedule.db")
             c = scconn.cursor()
             if new == True:
+                if DEBUG > 0:
+                    print "INSERT INTO settings (sename,low,high) VALUES (?,?,?)", (setting[0],float(setting[1]),float(setting[2]))
                 c.execute("INSERT INTO settings (sename,low,high) VALUES (?,?,?)", (setting[0],float(setting[1]),float(setting[2])))
             else:
+                if DEBUG > 0:
+                    print "UPDATE settings SET low=?,high=? WHERE sename=?", (float(setting[1]),float(setting[2]),setting[0])
                 c.execute("UPDATE settings SET low=?,high=? WHERE sename=?", (float(setting[1]),float(setting[2]),setting[0]))
+                scconn.commit()
 
-            for i in range(0,6):
-                if start[i]:
-                    c.execute('UPDATE schedule SET start=? where scname=? AND startday=?', (start[i], setting[0], i))
-                if end[i]:
-                    c.execute('UPDATE schedule SET end=? where scname=? AND startday=?', (end[i], setting[0], i))
-
+            c.execute("DELETE FROM schedule WHERE scname='" + setting[0] + "'")
             scconn.commit()
+
+            # For each day 0-6 (until 7)
+            for i in range(0,7):
+                startday = i
+                endday = i
+                print "Checking schedule " + setting[0] + " for " + self.days[i]
+                if start[i] == '' and end[i] == '':
+                    if DEBUG > 0:
+                        print "Start and end times cancelled. No new data to insert."
+                    break
+                elif start[i] == 'X' and end[i] == 'X':
+                    if DEBUG > 0:
+                        print "Start and end times cancelled. No new data to insert."
+                    break
+                elif start[i] == 'X' or start[i] == '':
+                    startday = -1
+                    start[i] = ''
+                elif end[i] == 'X' or end[i] == '':
+                    endday = -1
+                    end[i] = ''
+                else:
+                    if len(start[i]) < 8:
+                        start[i] = start[i] + ':00'
+                    if len(end[i]) < 8:
+                        end[i] = end[i] + ':00'
+                if DEBUG > 0:
+                    print "start[i] and end[i] present..." + start[i] + ", " + end[i]
+                c.execute('INSERT INTO schedule VALUES (?,?,?,?,?)', (setting[0], startday, start[i], endday, end[i]))
+                scconn.commit()
+
             scconn.close()
             self.read_schedule()
             return True
         else:
             print "bad data!"
             return False
-
 
     def get_one(self,name):
         scconn = sqlite3.connect("schedule.db")
@@ -266,11 +299,12 @@ class schedule():
 
         return self.current
 
-tschedule = schedule()
-tschedule.read_schedule()
+#tschedule = schedule()
+#tschedule.read_schedule()
+#tschedule.clean_schedule()
 #tschedule.hold('Home')
-tschedule.set_current()
-print tschedule.current
+#tschedule.set_current()
+#print tschedule.current
 #print tschedule.schedules
 #print tschedule.settings
 #print tschedule.settings[0][0]
