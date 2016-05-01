@@ -86,6 +86,34 @@ class schedule():
             self.settings.extend({row})
 
         scconn.close()
+        self.clean_schedule()
+
+    # Merge days for schedules
+    def clean_schedule(self):
+#        print "IN: "
+#        print self.schedules
+#        (u'Weekend', 5, u'04:30:00', -1, u'', 66.0, 75.0)
+#        (u'Weekend', -1, u'', 6, u'23:30:00', 66.0, 75.0)
+        found = bool()
+        out = []
+        for pschedule in self.schedules:
+            for schedule in self.schedules:
+                found = False
+                #if schedule[0] == pschedule[0] and schedule[1] == pschedule[3] and schedule != pschedule:
+                if schedule[0] == pschedule[0] and schedule[1] == -1 and pschedule[3] == -1 and schedule != pschedule:
+                    #print "merge"
+                    #print schedule
+                    #print pschedule
+                    temp = (schedule[0], pschedule[1], pschedule[2], schedule[3], schedule[4], schedule[5], schedule[6])
+                    out.extend({temp})
+                    #tmp = (schedule[0], pschedule[1], pschedule[2], schedule[3], schedule[4], schedule[5], schedule[6])
+                    #print tmp
+                    found = True
+            if found == False and pschedule[1] != -1 and pschedule[3] != -1:
+                out.extend({pschedule})
+#        print "OUT: "
+#        print out
+        self.schedules = out
 
     def del_setting(self,name):
         if DEBUG == 1:
@@ -306,7 +334,7 @@ class schedule():
 
 #tschedule = schedule()
 #tschedule.read_schedule()
-#tschedule.clean_schedule()
+#tschedule.print_schedule()
 #tschedule.hold('Home')
 #tschedule.set_current()
 #print tschedule.current
