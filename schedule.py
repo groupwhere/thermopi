@@ -88,7 +88,9 @@ class schedule():
         scconn.close()
         self.clean_schedule()
 
-    # Merge days for schedules
+    # Merge days for schedules crossing over midnight
+    #   For example, a schedule starts Friday 6pm and ends Sunday 3am.  The database will have two lines.
+    #   This function merges those into one schedule line
     def clean_schedule(self):
 #        print "IN: "
 #        print self.schedules
