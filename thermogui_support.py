@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 #
+# Support file for thermogui which handles all non-GUI functions
+#  including config read, etc.
+#
 import sys
 import os
 import subprocess
@@ -35,8 +38,8 @@ weatherEnabled = config.getboolean('weather','enabled')
 scheduleEnabled = config.getboolean('schedule','enabled')
 
 # Adafruit DHT11 and others
-sensor_type = config.get('main','sensor_type')
-sensor_pin  = int(config.get('main','sensor_pin'))
+#sensor_type = config.get('main','sensor_type')
+#sensor_pin  = int(config.get('main','sensor_pin'))
 
 #start the daemon in the background
 subprocess.Popen("/usr/bin/python rubustat_daemon.py start", shell=True)
@@ -117,7 +120,7 @@ if scheduleEnabled == True:
 
 # Main program functions
 def getWhatsOn():
-    if DEBUG == 1:
+    if DEBUG > 0:
         print "Called getWhatsOn\n"
     if GPIO == False:
         print "NO GPIO"
@@ -148,8 +151,8 @@ def getDaemonStatus():
         return "<p id=\"daemonNotRunning\"> DAEMON IS NOT RUNNING. </p>"
 
 def getStat():
-#    if DEBUG == 1:
-#        print "Called getStat\n"
+    if DEBUG > 0:
+        print "Called getStat\n"
 
     mode = ''
     targetTemp = 0
@@ -183,7 +186,7 @@ def getStat():
 def setStat(mode,target):
     match = re.search(r'^\d{2}$',target)
     if match:
-        if DEBUG == 1:
+        if DEBUG > 0:
             print "Setting new mode, temp to: " + mode + ', ' + target
 
         gconn = sqlite3.connect("status.db",timeout=10)
@@ -195,19 +198,19 @@ def setStat(mode,target):
         gconn.commit()
         gconn.close()
 
-        if DEBUG == 1:
+        if DEBUG > 0:
             print("New temperature of " + target + " set!")
 
         (mode,target) = getStat()
         return (mode,target)
     else:
-        if DEBUG == 1:
+        if DEBUG > 0:
             print("That is not a two digit number! Try again!")
 
 def updateTemp():
     global humidity, indoorTemp
-#    if DEBUG == 1:
-#        print "Called updateTemp\n"
+    if DEBUG > 0:
+        print "Called updateTemp\n"
 
     gconn = sqlite3.connect("status.db",timeout=10)
     found = False
