@@ -24,7 +24,7 @@ def vp_start_gui():
     root = Tk()
     root.config(cursor='none')
     # Production - no title bar
-    #root.overrideredirect(1)
+    root.overrideredirect(1)
     top = thermoGUI(root)
     root.resizable(0,0)
     root.after(0, top.timer)
@@ -49,16 +49,16 @@ class thermoGUI:
     def __init__(self, top=None):
         '''This class configures and populates the toplevel window.
            top is the toplevel containing window.'''
-        _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
-        _fgcolor = '#000000'  # X11 color: 'black'
-        _compcolor = '#d9d9d9' # X11 color: 'gray85'
-        _ana1color = '#d9d9d9' # X11 color: 'gray85'
-        _ana2color = '#d9d9d9' # X11 color: 'gray85'
+        #_bgcolor = '#d9d9d9'  # X11 color: 'gray85'
+        #_fgcolor = '#000000'  # X11 color: 'black'
+        #_compcolor = '#d9d9d9' # X11 color: 'gray85'
+        #_ana1color = '#d9d9d9' # X11 color: 'gray85'
+        #_ana2color = '#d9d9d9' # X11 color: 'gray85'
         self.font14 = "-family Cantarell -size 14 -weight bold -slant roman"  \
             " -underline 0 -overstrike 0"
-        self.font12 = "-family Cantarell -size 12 -weight normal -slant "  \
+        self.font12 = "-family Cantarell -size 12 -weight bold -slant "  \
             "roman -underline 0 -overstrike 0"
-        self.font10 = "-family Cantarell -size 10 -weight normal -slant "  \
+        self.font10 = "-family Cantarell -size 10 -weight bold -slant "  \
             "roman -underline 0 -overstrike 0"
 
         self.bigFont      = "-family Helvetica -size 22 -weight bold"
@@ -363,7 +363,7 @@ humidity''')
         self.temp.configure(justify=CENTER)
 
         self.templ = Label(self.mainframe)
-        self.templ.place(relx=0.58, rely=0.2, height=26, width=141)
+        self.templ.place(relx=0.58, rely=0.2, height=26, width=150)
         self.templ.configure(activebackground="black")
         self.templ.configure(activeforeground="white")
         self.templ.configure(activeforeground="white")
@@ -416,7 +416,7 @@ humidity''')
 
         if weatherEnabled == True and scheduleEnabled == True:
             self.weatherhead = Label(self.mainframe)
-            self.weatherhead.place(relx=0.10, rely=0.60, height=22, width=154)
+            self.weatherhead.place(relx=0.10, rely=0.60, height=22, width=170)
             self.weatherhead.configure(text='''Current Conditions''')
             self.weatherhead.configure(font=self.font12)
             self.weatherhead.configure(bg='black')
@@ -1302,7 +1302,9 @@ Temp''')
         self.endf = []
 
         for k in caldays['week']:
-            cd = Button(cal_entry,text=k,width=1,fg='black',bg='gray',command=lambda j=i,k=k: self.attach_btn(k,j))
+            #cd = Button(cal_entry,text=k,width=1,fg='black',bg='white',command=lambda j=i,k=k: self.attach_btn(k,j))
+            cd = Button(cal_entry,text=k,width=1,fg='white',bg='black',command=lambda j=i,k=k: self.attach_btn(k,j))
+            #cd = Button(cal_entry,text=k,width=1,fg='black',bg='gray25',command=lambda j=i,k=k: self.attach_btn(k,j))
 
             myschedule = guischedule.get_one_day(name,i)
             if len(myschedule) > 0:
@@ -1338,22 +1340,22 @@ Temp''')
                     cd.configure(fg='blue')
                     cd.configure(activeforeground='blue')
 
-                    startl = Button(cal_entry,command=calltimes,textvariable=self.startf[i],width=4,fg='green', bg='gray').grid(row=2,column=i)
-                    endl   = Button(cal_entry,command=calltimee,textvariable=self.endf[i],width=4,fg='red',bg='gray').grid(row=3,column=i)
+                    startl = Button(cal_entry,command=calltimes,textvariable=self.startf[i],width=4,fg='green', bg='light grey').grid(row=2,column=i)
+                    endl   = Button(cal_entry,command=calltimee,textvariable=self.endf[i],width=4,fg='red',bg='light grey').grid(row=3,column=i)
                 elif startday == i:
                     # Starts this day
                     #cd.configure(state=ACTIVE)
                     cd.configure(fg='green')
                     cd.configure(activeforeground='green')
-                    startl = Button(cal_entry,command=calltimes,textvariable=self.startf[i],width=4,fg='green',bg='gray').grid(row=2,column=i)
-                    endl   = Button(cal_entry,command=calltimee,textvariable=self.endf[i],width=4,bg='gray').grid(row=3,column=i)
+                    startl = Button(cal_entry,command=calltimes,textvariable=self.startf[i],width=4,fg='green',bg='light grey').grid(row=2,column=i)
+                    endl   = Button(cal_entry,command=calltimee,textvariable=self.endf[i],width=4,bg='light grey').grid(row=3,column=i)
                 elif endday == i:
                     # Ends this day
                     #cd.configure(state=ACTIVE)
                     cd.configure(fg='red')
                     cd.configure(activeforeground='red')
-                    startl = Button(cal_entry,command=calltimes,textvariable=self.startf[i],width=4,bg='gray').grid(row=2,column=i)
-                    endl   = Button(cal_entry,command=calltimee,textvariable=self.endf[i],width=4,fg='red',bg='gray').grid(row=3,column=i)
+                    startl = Button(cal_entry,command=calltimes,textvariable=self.startf[i],width=4,bg='light grey').grid(row=2,column=i)
+                    endl   = Button(cal_entry,command=calltimee,textvariable=self.endf[i],width=4,fg='red',bg='light grey').grid(row=3,column=i)
             else:
                 # Not scheduled for this day
                 self.startf.append(StringVar())
@@ -1362,8 +1364,8 @@ Temp''')
                 self.endf[i].set('')
                 calltimes = partial(self.timeAdj, '00:00', '00:00', name, 'scheduled setting',True,False, i)
                 calltimee = partial(self.timeAdj, '00:00', '00:00', name, 'scheduled setting',False,True, i)
-                startl = Button(cal_entry,command=calltimes,text='NA',textvariable=self.startf[i],width=4,bg='gray').grid(row=2,column=i)
-                endl   = Button(cal_entry,command=calltimee,text='NA',textvariable=self.endf[i],width=4,bg='gray').grid(row=3,column=i)
+                startl = Button(cal_entry,command=calltimes,text='NA',textvariable=self.startf[i],width=4,bg='light grey').grid(row=2,column=i)
+                endl   = Button(cal_entry,command=calltimee,text='NA',textvariable=self.endf[i],width=4,bg='light grey').grid(row=3,column=i)
 
             cd.grid(row=1,column=i,padx=5,ipadx=5,ipady=5)
             i = i + 1

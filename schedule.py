@@ -179,11 +179,11 @@ class schedule():
                 if start[i] == '' and end[i] == '':
                     if DEBUG > 0:
                         print "Start and end times cancelled. No new data to insert."
-                    break
+                    continue
                 elif start[i] == 'X' and end[i] == 'X':
                     if DEBUG > 0:
                         print "Start and end times cancelled. No new data to insert."
-                    break
+                    continue
                 elif start[i] == 'X' or start[i] == '':
                     startday = -1
                     start[i] = ''
