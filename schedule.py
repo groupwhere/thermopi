@@ -14,6 +14,7 @@ DEBUG = int(config.get('main','DEBUG'))
 class schedule():
     def __init__(self):
         self.holding = False
+        self.active = False
         #               0         1        2          3           4         5         6
         self.days = ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
         self.caldays = {'week' : ['Mo','Tu','We','Th','Fr','Sa','Su']}
@@ -31,6 +32,7 @@ class schedule():
         # Verify existence of tables
         c.execute('CREATE TABLE IF NOT EXISTS settings (sename TEXT, low FLOAT, high FLOAT)')
         c.execute('CREATE TABLE IF NOT EXISTS schedule (scname TEXT, startday INT, start TIMESTAMP, endday INT, end TIMESTAMP)')
+        c.execute('CREATE TABLE IF NOT EXISTS activation (active BOOL)')
 
         # Check for empty (new) settings table
         c.execute("SELECT COUNT(sename) FROM settings")
@@ -85,6 +87,9 @@ class schedule():
         for row in d.execute('SELECT sename,low,high FROM settings'):
             self.settings.extend({row})
 
+        for row in c.execute('SELECT active FROM activation'):
+            self.active = row[0]
+
         scconn.close()
         self.clean_schedule()
 
@@ -118,7 +123,7 @@ class schedule():
         self.schedules = out
 
     def del_setting(self,name):
-        if DEBUG == 1:
+        if DEBUG > 0:
             print "Deleting: " + name
         scconn = sqlite3.connect("schedule.db")
         c = scconn.cursor()
@@ -257,19 +262,45 @@ class schedule():
     def check_schedule(self):
         self.set_current()
         if self.current:
-            if DEBUG == 1:
-                print "Schedule currently in action!"
+            if DEBUG > 0:
+                if self.active == True:
+                    print "Schedule currently active!"
+                else:
+                    print "Schedule currently inactive!"
                 print schedule
 
     def hold(self,name):
         # Set and hold a schedule setting (override schedule)
         # Not yet fully implemented
         res = filter(lambda t: t[0] == name, self.settings)
-        if DEBUG >= 1:
+        if DEBUG > 0:
             print "Override schedule and set: " + name
             print res
         self.current = res
         self.holding = True
+
+    def save_active(self):
+        if DEBUG > 0:
+            print "schedule.save_active(" + str(self.active) + ")"
+        scconn = sqlite3.connect("schedule.db")
+        c = scconn.cursor()
+        c.execute('DELETE FROM activation');
+        scconn.commit()
+        c.execute('INSERT INTO activation (active) VALUES (?)', (self.active,))
+        scconn.commit()
+        scconn.close()
+
+    def set_active(self):
+        if DEBUG > 0:
+            print "Setting schedule to active."
+        self.active = True
+        self.save_active()
+
+    def set_inactive(self):
+        if DEBUG > 0:
+            print "Setting schedule to inactive."
+        self.active = False
+        self.save_active()
 
     def set_current(self):
         # Set the current schedule based on the current date, time, and available schedules

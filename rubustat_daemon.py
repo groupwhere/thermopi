@@ -78,7 +78,7 @@ class rubustatDaemon(Daemon):
     def configureGPIO(self):
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
-        if DEBUG == 1:
+        if DEBUG >= 1:
             sys.stderr.write("Setting up GPIO.\n")
             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
             log.write("Setting up GPIO at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
@@ -133,7 +133,7 @@ class rubustatDaemon(Daemon):
                 return 2
 
     def cool(self):
-        if DEBUG == 1:
+        if DEBUG >= 1:
             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
             log.write("Setting unit to cool.\n")
             log.close()
@@ -151,7 +151,7 @@ class rubustatDaemon(Daemon):
             return -1
 
     def heat(self):
-        if DEBUG == 1:
+        if DEBUG >= 1:
             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
             log.write("Setting unit to heat.\n")
             log.close()
@@ -169,7 +169,7 @@ class rubustatDaemon(Daemon):
             return 1
 
     def eheat(self):
-        if DEBUG == 1:
+        if DEBUG >= 1:
             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
             log.write("Setting unit to EMERGENCY heat.\n")
             log.close()
@@ -188,7 +188,7 @@ class rubustatDaemon(Daemon):
 
     def fan_to_idle(self):
         #to blow the rest of the heated / cooled air out of the system
-        if DEBUG == 1:
+        if DEBUG >= 1:
             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
             log.write("Setting unit to idle with fan.\n")
             log.close()
@@ -199,7 +199,7 @@ class rubustatDaemon(Daemon):
         GPIO.output(FAN_PIN, PIN_ON)
 
     def idle(self):
-        if DEBUG == 1:
+        if DEBUG >= 1:
             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
             log.write("Setting unit to idle (off) for 5 minutes.\n")
             log.close()
@@ -232,7 +232,7 @@ class rubustatDaemon(Daemon):
 
     def getWeather(self):
         url = 'http://api.wunderground.com/api/' + str(WUNDERGROUND) + '/geolookup/conditions/q/' + STATE + '/' + ZIP + '.json'
-#        if DEBUG == 1:
+#        if DEBUG >= 1:
 #            print "Fetching " + url + "\n"
         f = urllib2.urlopen(url)
         json_string = f.read()
@@ -255,7 +255,7 @@ class rubustatDaemon(Daemon):
         return weatherstring
 
     def updateTemp(self):
-#        if DEBUG == 1:
+#        if DEBUG >= 1:
 #        print "Called updateTemp\n"
 
         if sensor_type == 'DHT_11':
@@ -346,14 +346,17 @@ class rubustatDaemon(Daemon):
             if scheduleEnabled == True:
                 now = datetime.datetime.now()
                 # Set the current schedule
-                if DEBUG == 1:
+                if DEBUG >= 1:
                     print "Checking schedule"
                 #if self.dschedule.holding == False:
+#                self.dschedule.read_schedule()
                 self.dschedule.set_current()
                 # (re)set the mode based on the schedule, if any
                 #self.dschedule.check_schedule()
                 turnon = False
-                if mode != 'off':
+                low = ''
+                high = ''
+                if mode != 'off' and self.dschedule.active == True:
                     if len(self.dschedule.current):
                         turnon = True
                         # Compare indoorTemp and schedule temp settings
@@ -366,23 +369,29 @@ class rubustatDaemon(Daemon):
                             mode = 'cool'
                             targetTemp = high
 
+                if DEBUG >= 1:
+                    log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
+                    log.write("Schedule: active? " + str(self.dschedule.active) + ".\n")
+                    log.close()
+
                 scconn = sqlite3.connect("status.db",timeout=10)
                 sc = scconn.cursor()
                 # This is the schedule status not the schedule.db list of schedules.  Single line of data like the status table
                 sc.execute("DELETE FROM schedule")
                 if len(self.dschedule.current):
-                    sc.execute("INSERT INTO schedule (datetime,name,active) VALUES (?,?,?)", (now,itemgetter(0)(self.dschedule.current), 1))
+                    sc.execute("INSERT INTO schedule (datetime,name,active) VALUES (?,?,?)", (now,itemgetter(0)(self.dschedule.current), self.dschedule.active))
                 sc.execute("DELETE FROM status")
                 sc.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, targetTemp, mode))
                 scconn.commit()
                 scconn.close()
 
-                if DEBUG == 1 and self.dschedule.current and turnon == True:
+                if DEBUG >= 1 and self.dschedule.current:# and turnon == True:
                     log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                     log.write("Schedule: Set to " + str(self.dschedule.current) + "\n")
                     log.write("Schedule: New mode set to " + mode + "\n")
                     log.write("Schedule: New targetTemp set to " + str(targetTemp) + "\n")
                     log.write("Schedule: LOW = " + str(low) + ", HIGH = " + str(high) + "\n")
+                    log.write("Schedule: Active? " + str(self.dschedule.active) + "\n")
                     log.close()
 
             ### check if we need to send error mail
@@ -391,7 +400,7 @@ class rubustatDaemon(Daemon):
             if mailEnabled == True and (mailElapsed > datetime.timedelta(minutes=20)) and (float(indoorTemp) - float(targetTemp)) > errorThreshold:
                 self.sendErrorMail()
                 lastMail = datetime.datetime.now()
-                if DEBUG == 1:
+                if DEBUG >= 1:
                     log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                     log.write("MAIL: Sent mail to " + recipient + " at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                     log.close()
@@ -401,7 +410,7 @@ class rubustatDaemon(Daemon):
             if mailEnabled == True and (mailElapsed > datetime.timedelta(minutes=20)) and (float(targetTemp) - float(indoorTemp)) > errorThreshold:
                 self.sendErrorMail()
                 lastMail = datetime.datetime.now()
-                if DEBUG == 1:
+                if DEBUG >= 1:
                     log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                     log.write("MAIL: Sent mail to " + recipient + " at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                     log.close()
@@ -421,7 +430,7 @@ class rubustatDaemon(Daemon):
             if mode == "heat":
                 if hvacState == 0: #idle
                     if float(indoorTemp) < float(targetTemp) - inactive_hysteresis:
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to heat at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
@@ -429,20 +438,20 @@ class rubustatDaemon(Daemon):
                         hvacState = self.heat()
                 elif hvacState == 1: #heating
                     if float(indoorTemp) > float(targetTemp) + active_hysteresis:
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to fan_to_idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
                         self.fan_to_idle()
                         time.sleep(30)
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
                         # switch to idle
                         hvacState = self.idle()
                     elif float(indoorTemp) < float(emergency_temp) + active_hysteresis:
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to eheat at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
@@ -450,13 +459,13 @@ class rubustatDaemon(Daemon):
                         hvacState = self.eheat()
                 elif hvacState == -2: # emergency heat running but already warm enough
                     if float(indoorTemp) > float(emergency_temp) + active_hysteresis:
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to heat from eheat at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
                         hvacState = self.heat()
                 elif hvacState == -1: # it's cold out, why is the AC running?
-                    if DEBUG == 1:
+                    if DEBUG >= 1:
                         log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                         log.write("STATE: Switching to idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                         log.close()
@@ -465,46 +474,46 @@ class rubustatDaemon(Daemon):
             elif mode == "cool":
                 if hvacState == 0: #idle
                     if float(indoorTemp) > float(targetTemp) + inactive_hysteresis:
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to cool at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
                         hvacState = self.cool()
                 elif hvacState == -1: #cooling
                     if float(indoorTemp) < float(targetTemp) - active_hysteresis:
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to fan_to_idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
                         self.fan_to_idle()
                         time.sleep(30)
-                        if DEBUG == 1:
+                        if DEBUG >= 1:
                             log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                             log.write("STATE: Switching to idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                             log.close()
                         hvacState = self.idle()
                 elif hvacState == 1: # it's hot out, why is the heater on?
-                    if DEBUG == 1:
+                    if DEBUG >= 1:
                         log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                         log.write("STATE: Switching to fan_to_idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                         log.close()
                     hvacState = self.idle()
                 elif hvacState == -2: # it's hot out, why is the emergency heater on?
-                    if DEBUG == 1:
+                    if DEBUG >= 1:
                         log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                         log.write("STATE: Switching to fan_to_idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                         log.close()
                     hvacState = self.idle()
             elif mode == "off":
                 if hvacState == -1: #cooling
-                    if DEBUG == 1:
+                    if DEBUG >= 1:
                         log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                         log.write("STATE: Switching to fan_to_idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                         log.close()
                     self.fan_to_idle()
                     time.sleep(30)
                 elif hvacState == 1: # it's hot out, why is the heater on?
-                    if DEBUG == 1:
+                    if DEBUG >= 1:
                         log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                         log.write("STATE: Switching to fan_to_idle at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
                         log.close()
@@ -515,7 +524,7 @@ class rubustatDaemon(Daemon):
                 print "It broke."
 
             #loggin'stuff
-            if DEBUG == 1:
+            if DEBUG >= 1:
                 if PIN_ON == 0:
                     obStatus   = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
                     heatStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())

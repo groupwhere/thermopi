@@ -184,28 +184,24 @@ def getStat():
     return mode,targetTemp
 
 def setStat(mode,target):
-    match = re.search(r'^\d{2}$',target)
-    if match:
-        if DEBUG > 0:
-            print "Setting new mode, temp to: " + mode + ', ' + target
+	#    match = re.search(r'^\d{2,4}$',target)
+    if DEBUG > 0:
+        print "Setting new mode, temp to: " + mode + ', ' + target
 
-        gconn = sqlite3.connect("status.db",timeout=10)
-        c = gconn.cursor()
-        now = datetime.datetime.now()
+    gconn = sqlite3.connect("status.db",timeout=10)
+    c = gconn.cursor()
+    now = datetime.datetime.now()
 
-        c.execute("DELETE FROM status")
-        c.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, target, mode))
-        gconn.commit()
-        gconn.close()
+    c.execute("DELETE FROM status")
+    c.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, target, mode))
+    gconn.commit()
+    gconn.close()
 
-        if DEBUG > 0:
-            print("New temperature of " + target + " set!")
+    if DEBUG > 0:
+        print("New temperature of " + target + " set!")
 
-        (mode,target) = getStat()
-        return (mode,target)
-    else:
-        if DEBUG > 0:
-            print("That is not a two digit number! Try again!")
+    (mode,target) = getStat()
+    return (mode,target)
 
 def updateTemp():
     global humidity, indoorTemp

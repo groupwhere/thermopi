@@ -24,7 +24,7 @@ def vp_start_gui():
     root = Tk()
     root.config(cursor='none')
     # Production - no title bar
-    root.overrideredirect(1)
+#    root.overrideredirect(1)
     top = thermoGUI(root)
     root.resizable(0,0)
     root.after(0, top.timer)
@@ -446,10 +446,11 @@ humidity''')
             self.schedulestat.configure(wraplength=200)
 
             self.scheddis = Button(self.mainframe)
-            self.scheddis.place(relx=0.58, rely=0.90, height=30, width=60)
+            self.scheddis.place(relx=0.53, rely=0.90, height=30, width=60)
             self.scheddis.configure(text='')
             self.scheddis.configure(textvariable=self.scheddisF)
-            self.scheddis.configure(font=self.scheduleFont)
+            #self.scheddis.configure(font=self.scheduleFont)
+            self.scheddis.configure(font=self.font10)
             self.scheddis.configure(command=self.disSched)
             self.scheddis.configure(height=1)
             self.scheddis.configure(width=2)
@@ -459,7 +460,8 @@ humidity''')
             self.schedcon = Button(self.mainframe)
             self.schedcon.place(relx=0.80, rely=0.90, height=30, width=60)
             self.schedcon.configure(text='config')
-            self.schedcon.configure(font=self.scheduleFont)
+            #self.schedcon.configure(font=self.scheduleFont)
+            self.schedcon.configure(font=self.font10)
             self.schedcon.configure(command=self.confSched)
             self.schedcon.configure(height=1)
             self.schedcon.configure(width=2)
@@ -907,7 +909,15 @@ Temp''')
         if scheduleEnabled == True:
             (mode,target) = getStat()
             (schedulename,scheduleactive) = getSched()
-            if scheduleactive == True:
+
+            if DEBUG > 0:
+                print "Schedule name:   " + schedulename
+                print "Schedule active: " + str(scheduleactive)
+
+            if scheduleactive == True and guischedule.active == True:
+#                guischedule.set_active()
+                self.newmode.set(mode)
+                self.targetTempf.set(target)
                 #tmpf = str(self.idleStringf.get())
                 #self.idleStringf.set('[' + schedulename + '] ' + tmpf)
                 if mode == 'off' and idling == True:
@@ -916,14 +926,12 @@ Temp''')
                     self.idleStringf.set('[' + schedulename + ']')
 
                 tmps = get_sched(schedulename)
-                if self.newmode.get() == 'off':
-                    self.scheduleStatf.set('[' + schedulename + '] INACTIVE' + "\n" + tmps)
-                    self.scheddisF.set('enable')
-                else:
-                    self.scheduleStatf.set('[' + schedulename + '] ACTIVE' + "\n" + tmps)
-                    self.scheddisF.set('disable')
+                self.scheduleStatf.set('[' + schedulename + '] ACTIVE' + "\n" + tmps)
+                self.scheddisF.set('disable')
             else:
-                self.scheduleStatf.set('[none] active')
+#                guischedule.set_inactive()
+                tmps = get_sched(schedulename)
+                self.scheduleStatf.set('[' + schedulename + '] INACTIVE' + "\n" + tmps)
                 self.scheddisF.set('enable')
 
     def setstat(self):
@@ -934,13 +942,16 @@ Temp''')
         setStat(temp_mode,temp_targetTemp)
 
     def disSched(self):
+        global guischedule
         # Disable current schedule
         if self.scheddisF.get() == 'enable':
             self.scheddisF.set('disable')
-            self.newmode.set('cool')
+#            self.newmode.set('cool')
+            guischedule.set_active()
         else:
             self.scheddisF.set('enable')
-            self.newmode.set('off')
+#            self.newmode.set('off')
+            guischedule.set_inactive()
         self.setstat()
 
     # Increment or decrement temp setting based on the click of one of the arrow buttons
