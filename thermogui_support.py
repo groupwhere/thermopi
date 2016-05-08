@@ -98,6 +98,19 @@ if scheduleEnabled == True:
         #print "Schedule " + schedulename + " is " + str(scheduleactive)
         return str(schedulename),bool(scheduleactive)
 
+    def setSched(name):
+        now = datetime.datetime.now()
+        gconn = sqlite3.connect("status.db",10)
+        g = gconn.cursor()
+        g.execute('DELETE FROM schedule')
+        gconn.commit()
+        g.execute('INSERT INTO schedule VALUES(?,?,?)', (now,name,1))
+        gconn.commit()
+        gconn.close()
+
+        if DEBUG > 0:
+            print "SCHEDULE OVERRIDE SET TO " + name
+
     def get_sched(name):
         # Gets the current schedule for display
         global guischedule
@@ -116,7 +129,10 @@ if scheduleEnabled == True:
 
             return "starts " + startday + " at " + start + " and ends " + endday + " at " + end + " with min/max temp of " + low + "/" + high + "."
 
-        return "No active schedule."
+        if guischedule.holding == True:
+            return ""
+        else:
+            return "No active schedule."
 
 # Main program functions
 def getWhatsOn():
@@ -184,7 +200,7 @@ def getStat():
     return mode,targetTemp
 
 def setStat(mode,target):
-	#    match = re.search(r'^\d{2,4}$',target)
+    #    match = re.search(r'^\d{2,4}$',target)
     if DEBUG > 0:
         print "Setting new mode, temp to: " + mode + ', ' + target
 

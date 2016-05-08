@@ -4,7 +4,6 @@ import sys
 import subprocess
 import os
 import time
-import RPi.GPIO as GPIO
 import datetime
 import ConfigParser
 import urllib2
@@ -26,6 +25,7 @@ os.chdir(dname)
 config = ConfigParser.ConfigParser()
 config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
+GPIO = int(config.get('main','GPIO'))
 active_hysteresis = float(config.get('main','active_hysteresis'))
 inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
 SCALE = config.get('main','SCALE')
@@ -52,6 +52,9 @@ scheduleEnabled = config.getboolean('schedule','enabled')
 sensor_type = config.get('main','sensor_type')
 sensor_pin  = int(config.get('main','sensor_pin'))
 
+if GPIO == 1:
+    import RPi.GPIO as GPIO
+
 if sensor_type == 'DHT_11':
     import Adafruit_DHT
 
@@ -76,61 +79,65 @@ class rubustatDaemon(Daemon):
     dschedule.read_schedule()
 
     def configureGPIO(self):
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-        if DEBUG >= 1:
-            sys.stderr.write("Setting up GPIO.\n")
-            log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
-            log.write("Setting up GPIO at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
-            log.close()
-
-        GPIO.setup(HEATER_PIN, GPIO.OUT, initial=PIN_OFF)
-        GPIO.setup(OB_PIN, GPIO.OUT, initial=PIN_OFF)
-        GPIO.setup(AC_PIN, GPIO.OUT, initial=PIN_OFF)
-        GPIO.setup(FAN_PIN, GPIO.OUT, initial=PIN_OFF)
-
-        subprocess.Popen("echo " + str(HEATER_PIN) + " > /sys/class/gpio/export", shell=True)
-        subprocess.Popen("echo " + str(OB_PIN) + " > /sys/class/gpio/export", shell=True)
-        subprocess.Popen("echo " + str(AC_PIN) + " > /sys/class/gpio/export", shell=True)
-        subprocess.Popen("echo " + str(FAN_PIN) + " > /sys/class/gpio/export", shell=True)
+        if GPIO == 1:
+            GPIO.setwarnings(False)
+            GPIO.setmode(GPIO.BCM)
+            if DEBUG >= 1:
+                sys.stderr.write("Setting up GPIO.\n")
+                log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
+                log.write("Setting up GPIO at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n")
+                log.close()
+    
+            GPIO.setup(HEATER_PIN, GPIO.OUT, initial=PIN_OFF)
+            GPIO.setup(OB_PIN, GPIO.OUT, initial=PIN_OFF)
+            GPIO.setup(AC_PIN, GPIO.OUT, initial=PIN_OFF)
+            GPIO.setup(FAN_PIN, GPIO.OUT, initial=PIN_OFF)
+    
+            subprocess.Popen("echo " + str(HEATER_PIN) + " > /sys/class/gpio/export", shell=True)
+            subprocess.Popen("echo " + str(OB_PIN) + " > /sys/class/gpio/export", shell=True)
+            subprocess.Popen("echo " + str(AC_PIN) + " > /sys/class/gpio/export", shell=True)
+            subprocess.Popen("echo " + str(FAN_PIN) + " > /sys/class/gpio/export", shell=True)
 
     def getHVACState(self):
-        obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-        heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-        coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-        fanStatus  = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-
-        if AC_TYPE == 0:
-            # Standard AC
-            if heatStatus == PIN_ON and fanStatus == PIN_ON:
-                #heating
-                return 1
-            elif coolStatus == PIN_ON and fanStatus == PIN_ON:
-                #cooling
-                return -1
-            elif heatStatus == PIN_OFF and coolStatus == PIN_OFF and fanStatus == PIN_OFF:
-                #idle
-                return 0
+        if GPIO == 1:
+            obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+            heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+            coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+            fanStatus  = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+    
+            if AC_TYPE == 0:
+                # Standard AC
+                if heatStatus == PIN_ON and fanStatus == PIN_ON:
+                    #heating
+                    return 1
+                elif coolStatus == PIN_ON and fanStatus == PIN_ON:
+                    #cooling
+                    return -1
+                elif heatStatus == PIN_OFF and coolStatus == PIN_OFF and fanStatus == PIN_OFF:
+                    #idle
+                    return 0
+                else:
+                    #broken
+                    return 2
             else:
-                #broken
-                return 2
+                # Heat pump
+                if heatStatus == PIN_ON and fanStatus == PIN_ON and coolStatus == PIN_OFF and obStatus == PIN_OFF:
+                    #emergency heat
+                    return -2
+                elif heatStatus == PIN_OFF and fanStatus == PIN_ON and coolStatus == PIN_ON and obStatus == PIN_ON:
+                    #heating
+                    return 1
+                elif heatStatus == PIN_OFF and coolStatus == PIN_ON and fanStatus == PIN_ON and obStatus == PIN_OFF:
+                    #cooling
+                    return -1
+                elif heatStatus == PIN_OFF and coolStatus == PIN_OFF and fanStatus == PIN_OFF and obStatus == PIN_OFF:
+                    #idle
+                    return 0
+                else:
+                    #broken
+                    return 2
         else:
-            # Heat pump
-            if heatStatus == PIN_ON and fanStatus == PIN_ON and coolStatus == PIN_OFF and obStatus == PIN_OFF:
-                #emergency heat
-                return -2
-            elif heatStatus == PIN_OFF and fanStatus == PIN_ON and coolStatus == PIN_ON and obStatus == PIN_ON:
-                #heating
-                return 1
-            elif heatStatus == PIN_OFF and coolStatus == PIN_ON and fanStatus == PIN_ON and obStatus == PIN_OFF:
-                #cooling
-                return -1
-            elif heatStatus == PIN_OFF and coolStatus == PIN_OFF and fanStatus == PIN_OFF and obStatus == PIN_OFF:
-                #idle
-                return 0
-            else:
-                #broken
-                return 2
+            return 0
 
     def cool(self):
         if DEBUG >= 1:
@@ -138,16 +145,19 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to cool.\n")
             log.close()
 
-        if AC_TYPE == 0:
-            GPIO.output(HEATER_PIN, PIN_OFF)
-            GPIO.output(AC_PIN, PIN_ON)
-            GPIO.output(FAN_PIN, PIN_ON)
-            return -1
+        if GPIO == 1:
+            if AC_TYPE == 0:
+                GPIO.output(HEATER_PIN, PIN_OFF)
+                GPIO.output(AC_PIN, PIN_ON)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return -1
+            else:
+                GPIO.output(HEATER_PIN, PIN_OFF)
+                GPIO.output(OB_PIN, PIN_OFF)
+                GPIO.output(AC_PIN, PIN_ON)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return -1
         else:
-            GPIO.output(HEATER_PIN, PIN_OFF)
-            GPIO.output(OB_PIN, PIN_OFF)
-            GPIO.output(AC_PIN, PIN_ON)
-            GPIO.output(FAN_PIN, PIN_ON)
             return -1
 
     def heat(self):
@@ -156,17 +166,20 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to heat.\n")
             log.close()
 
-        if AC_TYPE == 0:
-            GPIO.output(HEATER_PIN, PIN_ON)
-            GPIO.output(AC_PIN, PIN_OFF)
-            GPIO.output(FAN_PIN, PIN_ON)
-            return 1
+        if GPIO == 1:
+            if AC_TYPE == 0:
+                GPIO.output(HEATER_PIN, PIN_ON)
+                GPIO.output(AC_PIN, PIN_OFF)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return 1
+            else:
+                GPIO.output(HEATER_PIN, PIN_OFF)
+                GPIO.output(OB_PIN, PIN_ON)
+                GPIO.output(AC_PIN, PIN_ON)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return 1
         else:
-            GPIO.output(HEATER_PIN, PIN_OFF)
-            GPIO.output(OB_PIN, PIN_ON)
-            GPIO.output(AC_PIN, PIN_ON)
-            GPIO.output(FAN_PIN, PIN_ON)
-            return 1
+            return -1
 
     def eheat(self):
         if DEBUG >= 1:
@@ -174,18 +187,20 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to EMERGENCY heat.\n")
             log.close()
 
-        if AC_TYPE == 0:
-            GPIO.output(HEATER_PIN, PIN_ON)
-            GPIO.output(AC_PIN, PIN_OFF)
-            GPIO.output(FAN_PIN, PIN_ON)
-            return 1
+        if GPIO == 1:
+            if AC_TYPE == 0:
+                GPIO.output(HEATER_PIN, PIN_ON)
+                GPIO.output(AC_PIN, PIN_OFF)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return 1
+            else:
+                GPIO.output(HEATER_PIN, PIN_ON)
+                GPIO.output(OB_PIN, PIN_OFF)
+                GPIO.output(AC_PIN, PIN_OFF)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return 1
         else:
-            GPIO.output(HEATER_PIN, PIN_ON)
-            GPIO.output(OB_PIN, PIN_OFF)
-            GPIO.output(AC_PIN, PIN_OFF)
-            GPIO.output(FAN_PIN, PIN_ON)
-            return 1
-
+            return -1
     def fan_to_idle(self):
         #to blow the rest of the heated / cooled air out of the system
         if DEBUG >= 1:
@@ -193,10 +208,11 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to idle with fan.\n")
             log.close()
 
-        GPIO.output(HEATER_PIN, PIN_OFF)
-        GPIO.output(AC_PIN, PIN_OFF)
-        GPIO.output(OB_PIN, PIN_OFF)
-        GPIO.output(FAN_PIN, PIN_ON)
+        if GPIO == 1:
+            GPIO.output(HEATER_PIN, PIN_OFF)
+            GPIO.output(AC_PIN, PIN_OFF)
+            GPIO.output(OB_PIN, PIN_OFF)
+            GPIO.output(FAN_PIN, PIN_ON)
 
     def idle(self):
         if DEBUG >= 1:
@@ -204,12 +220,13 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to idle (off) for 5 minutes.\n")
             log.close()
 
-        GPIO.output(HEATER_PIN, PIN_OFF)
-        GPIO.output(OB_PIN, PIN_OFF)
-        GPIO.output(AC_PIN, PIN_OFF)
-        GPIO.output(FAN_PIN, PIN_OFF)
-        #delay to preserve compressor - not while testing
-        #time.sleep(300)
+        if GPIO == 1:
+            GPIO.output(HEATER_PIN, PIN_OFF)
+            GPIO.output(OB_PIN, PIN_OFF)
+            GPIO.output(AC_PIN, PIN_OFF)
+            GPIO.output(FAN_PIN, PIN_OFF)
+            #delay to preserve compressor - not while testing
+            #time.sleep(300)
         return 0
 
     if mailEnabled == True:
@@ -349,7 +366,7 @@ class rubustatDaemon(Daemon):
                 if DEBUG >= 1:
                     print "Checking schedule"
                 #if self.dschedule.holding == False:
-#                self.dschedule.read_schedule()
+                self.dschedule.read_schedule()
                 self.dschedule.set_current()
                 # (re)set the mode based on the schedule, if any
                 #self.dschedule.check_schedule()
@@ -377,13 +394,14 @@ class rubustatDaemon(Daemon):
                 scconn = sqlite3.connect("status.db",timeout=10)
                 sc = scconn.cursor()
                 # This is the schedule status not the schedule.db list of schedules.  Single line of data like the status table
-                sc.execute("DELETE FROM schedule")
-                if len(self.dschedule.current):
-                    sc.execute("INSERT INTO schedule (datetime,name,active) VALUES (?,?,?)", (now,itemgetter(0)(self.dschedule.current), self.dschedule.active))
-                sc.execute("DELETE FROM status")
-                sc.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, targetTemp, mode))
-                scconn.commit()
-                scconn.close()
+                if self.dschedule.holding == False:
+                    sc.execute("DELETE FROM schedule")
+                    if len(self.dschedule.current):
+                        sc.execute("INSERT INTO schedule (datetime,name,active) VALUES (?,?,?)", (now,itemgetter(0)(self.dschedule.current), self.dschedule.active))
+                    sc.execute("DELETE FROM status")
+                    sc.execute("INSERT INTO status (datetime,targetTemp,mode) VALUES (?,?,?)", (now, targetTemp, mode))
+                    scconn.commit()
+                    scconn.close()
 
                 if DEBUG >= 1 and self.dschedule.current:# and turnon == True:
                     log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
