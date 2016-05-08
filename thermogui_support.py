@@ -138,7 +138,7 @@ if scheduleEnabled == True:
 def getWhatsOn():
     if DEBUG > 0:
         print "Called getWhatsOn\n"
-    if GPIO == False:
+    if GPIOE == False:
         print "NO GPIO"
         return (0,0,0,0)
     if PIN_ON == 1:
