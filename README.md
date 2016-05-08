@@ -14,7 +14,7 @@ This project is a fork of Rubustat (info below)
 
 ##Modifications
 
-* GUI should be working to configure the schedule via the schedule class.  You should now be able to disable the schedule for as long as you want it to be.  Work in progress 05 May 2016
+* GUI should be working to configure the schedule via the schedule class.  You should now be able to disable the schedule for as long as you want it to be.  You can also now override the schedule with another setting.  Work in progress 07 May 2016
 
 * Added support for heat pumps.
 	This requires 4 devices to control cool, fan, reversing valve, and emergency heat
