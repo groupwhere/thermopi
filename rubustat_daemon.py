@@ -25,7 +25,7 @@ os.chdir(dname)
 config = ConfigParser.ConfigParser()
 config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
-GPIO = int(config.get('main','GPIO'))
+GPIOE = int(config.get('main','GPIOE'))
 active_hysteresis = float(config.get('main','active_hysteresis'))
 inactive_hysteresis = float(config.get('main','inactive_hysteresis'))
 SCALE = config.get('main','SCALE')
@@ -52,7 +52,7 @@ scheduleEnabled = config.getboolean('schedule','enabled')
 sensor_type = config.get('main','sensor_type')
 sensor_pin  = int(config.get('main','sensor_pin'))
 
-if GPIO == 1:
+if GPIOE == 1:
     import RPi.GPIO as GPIO
 
 if sensor_type == 'DHT_11':
@@ -79,7 +79,7 @@ class rubustatDaemon(Daemon):
     dschedule.read_schedule()
 
     def configureGPIO(self):
-        if GPIO == 1:
+        if GPIOE == 1:
             GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BCM)
             if DEBUG >= 1:
@@ -99,7 +99,7 @@ class rubustatDaemon(Daemon):
             subprocess.Popen("echo " + str(FAN_PIN) + " > /sys/class/gpio/export", shell=True)
 
     def getHVACState(self):
-        if GPIO == 1:
+        if GPIOE == 1:
             obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
             heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
             coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -145,7 +145,7 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to cool.\n")
             log.close()
 
-        if GPIO == 1:
+        if GPIOE == 1:
             if AC_TYPE == 0:
                 GPIO.output(HEATER_PIN, PIN_OFF)
                 GPIO.output(AC_PIN, PIN_ON)
@@ -166,7 +166,7 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to heat.\n")
             log.close()
 
-        if GPIO == 1:
+        if GPIOE == 1:
             if AC_TYPE == 0:
                 GPIO.output(HEATER_PIN, PIN_ON)
                 GPIO.output(AC_PIN, PIN_OFF)
@@ -187,7 +187,7 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to EMERGENCY heat.\n")
             log.close()
 
-        if GPIO == 1:
+        if GPIOE == 1:
             if AC_TYPE == 0:
                 GPIO.output(HEATER_PIN, PIN_ON)
                 GPIO.output(AC_PIN, PIN_OFF)
@@ -208,7 +208,7 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to idle with fan.\n")
             log.close()
 
-        if GPIO == 1:
+        if GPIOE == 1:
             GPIO.output(HEATER_PIN, PIN_OFF)
             GPIO.output(AC_PIN, PIN_OFF)
             GPIO.output(OB_PIN, PIN_OFF)
@@ -220,7 +220,7 @@ class rubustatDaemon(Daemon):
             log.write("Setting unit to idle (off) for 5 minutes.\n")
             log.close()
 
-        if GPIO == 1:
+        if GPIOE == 1:
             GPIO.output(HEATER_PIN, PIN_OFF)
             GPIO.output(OB_PIN, PIN_OFF)
             GPIO.output(AC_PIN, PIN_OFF)

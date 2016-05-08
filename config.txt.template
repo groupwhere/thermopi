@@ -4,7 +4,7 @@
 DEBUG = 0
 
 # Use GPIO - only off for demo runs without GPIO
-GPIO = 1
+GPIOE = 1
 
 #These two are difficult to explain.
 #Let's say we want it to be 75, and it's in cooling mode.
