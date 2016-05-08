@@ -51,6 +51,9 @@ thermo_guisupport.py.  It also interacts with databases managed by schedule.py a
 		Click on enable/disable to enable or disable the schedule.  The button text will change dependent
 	upon the current schedule's active state.
 
+		Click on the center button to re-enable the current schedule.  This is only active if the schedule
+	was previously overridden (held) using the Use button in the Settings page.
+
 		Click on config to open the settings page (next section).
 
  II. Settings page (only if scheduling is enabled)
@@ -62,7 +65,9 @@ thermo_guisupport.py.  It also interacts with databases managed by schedule.py a
 
 		For each of the listed SETTINGS, you will see Edit, Delete, and Use buttons.  The most useful of these
 	is the Edit button.  Upon clicking an edit button next to one of the settings, you will be presented
-	with another popup window showing the scheduling details for this particular setting (next section).
+	with another popup window showing the scheduling details for this particular setting (next section).  The
+	Use button will allow you to override the currently scheduled setting, e.g. you are unexpectedly home, not
+	away, etc.
 
 III. Settings edit page
 		This page lists the scheduling details for a setting.  It contains text entries for low and high temp
