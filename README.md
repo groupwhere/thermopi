@@ -13,8 +13,9 @@ Thermopi
 This project is a fork of Rubustat (info below)
 
 ##Modifications
+* Added on screen keyboard with code modified from http://stackoverflow.com/questions/24622719/tkinter-keyboard-on-screen.  Modified to use place instead of grid and incorporated into the main gui code.  Created numpad version of this code.  These new functions allow you to create a new setting using a touch screen.  Work in progress 20 May 2016.
 
-* GUI should be working to configure the schedule via the schedule class.  You should now be able to disable the schedule for as long as you want it to be.  You can also now override the schedule with another setting.  Work in progress 07 May 2016
+* GUI should be working to configure the schedule via the schedule class.  You should now be able to disable the schedule for as long as you want it to be.  You can also now override the schedule with another setting.  Work in progress 07 May 2016.
 
 * Added support for heat pumps.
 	This requires 4 devices to control cool, fan, reversing valve, and emergency heat
