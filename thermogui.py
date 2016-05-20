@@ -96,6 +96,10 @@ class thermoGUI:
         self.nlowf  = StringVar()
         self.nhighf = StringVar()
 
+        # For keyboard
+        self.display = StringVar()
+        self.keyresult = StringVar()
+
         # For timeset
         self.timead_name = StringVar()
         self.timead_type = StringVar()
@@ -847,6 +851,296 @@ Temp''')
         tcbutton = Button(self.tempset, text='Close', command=ttlowerme)
         tcbutton.place(relx=0.55, rely=0.80, height=25, width=40)
 
+        # Below for popup numpad
+        self.numset = Frame(top)
+        self.numset.place(relx=0.2, rely=0.04, relheight=0.91, relwidth=0.44)
+        self.numset.configure(relief=GROOVE)
+        self.numset.configure(borderwidth="2")
+        self.numset.configure(relief=GROOVE)
+        self.numset.configure(takefocus="1")
+        self.numset.configure(background="#000000")
+        self.numset.configure(width=105)
+        self.numset.lower(self.mainframe)
+
+        self.num_list = [
+            '1', '2', '3',
+            '4', '5', '6',
+            '7', '8', '9',
+            '0', '.', 'BS',
+            'Enter'
+        ]
+
+        # Below for popup keyboard
+        self.keyset = Frame(top)
+        self.keyset.place(relx=0.02, rely=0.02, relheight=0.91, relwidth=0.94)
+        self.keyset.configure(relief=GROOVE)
+        self.keyset.configure(borderwidth="2")
+        self.keyset.configure(relief=GROOVE)
+        self.keyset.configure(takefocus="1")
+        self.keyset.configure(background="#000000")
+        self.keyset.configure(width=450)
+        self.keyset.lower(self.mainframe)
+
+        self.btn_list = [
+            '1',    '2', '3', '4', '5', '6', '7', '8', '9', '0', 'BS',
+            'q',    'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '', '',
+            'Caps', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'Enter',
+            'Shift','z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '/',
+            '<<',   'Space', '>>', 'Clear'
+        ]
+        self.btn_listU = [
+            '!',    '@', '#', '$', '%', '^', '&', '*', '(', ')', 'BS',
+            'Q',    'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '', '',
+            'Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Enter',
+            'Shift','Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>',
+            '<<',   'Space', '>>', 'Clear'
+        ]
+        self.btns = [
+           'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10',
+           'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10', 'b11',
+           'c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10',
+           'd0', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9',
+           'e0', 'e1', 'e2', 'e3'
+        ]
+
+        self.keycols = 12
+        self.keyrows = 5
+        self.keystate = 1
+
+    # Keyboard functions
+    def call(self, num):
+        content = self.display.get() + num
+        self.display.set(content)
+        if self.keystate == 2:  # Shift press
+            self.updatepopupkeyboard(1)
+            self.keystate = 1
+
+    def EnterNum(self,varname):
+        content = self.display.get()
+        if content == '':
+            pass
+        else:
+            self.keyresult = content
+            varname.set(self.keyresult)
+            self.numset.lower(self.mainframe)
+
+    def Enter(self,varname):
+        content = self.display.get()
+        if content == '':
+            pass
+        else:
+            self.keyresult = content
+            varname.set(self.keyresult)
+            self.keyset.lower(self.mainframe)
+
+    def clear(self):
+        self.display.set('')
+
+    def Backspace(self):
+        pass
+
+    def Shift(self):
+        if self.keystate == 2:
+            self.keystate = 1
+        else:
+            self.keystate = 2
+
+        self.updatepopupkeyboard(self.keystate)
+
+    def backspace(self):
+        self.display.set(str(self.display.get()[:-1]))
+
+    def CapsLock(self):
+        if self.keystate == 1:
+            self.keystate = 2
+        elif self.keystate == 2:
+            self.keystate = 1
+        self.updatepopupkeyboard(self.keystate)
+
+    def Space(self):
+        pass
+
+    def updatepopupkeyboard(self,mtyp):
+        if mtyp == 1:
+            key = self.btn_list
+        elif mtyp == 2:
+            key = self.btn_listU
+
+        i = -1
+
+        for b in key:
+            i += 1
+            if len(b) == 1:
+                cmd = lambda x=b:self.call(x)
+                if DEBUG > 0:
+                    print "Setting text of self.btns[" + str(i) + "] to " + b
+                self.btns[i].configure(text=b,command=cmd)
+
+    def popupnumpad(self,varname):
+        self.numbtns = [
+            'n0',  'n1',  'n2',
+            'n3',  'n4',  'n5',
+            'n6',  'n7',  'n8',
+            'n9',  'n10', 'n11',
+            'n12'
+        ]
+
+        self.keyresult = ''
+        self.display.set('')
+        self.numset.lift(self.addset)
+        keylabel = Label(self.numset, font=('Helvetica', 18), relief='sunken', borderwidth=3, bg='gray80', anchor=SW, fg='green', textvariable=self.display)
+        keylabel.place(relx=0.0, rely=0.0, height=35, width=105)
+
+        fn = ('Helvetica', 10)
+        fnbold = ('Helvetica', 10, 'bold')
+        rel = 'raised'
+
+        r = 1
+        c = 0
+        i = -1
+
+        for b in self.num_list:
+            i += 1
+            c_span = 35
+            r_span = 35
+            cmd = lambda x=b:self.call(x)
+            if c > 0:
+#                cpos = c * 0.08
+                cpos = c * 0.17
+            else:
+                cpos = 0
+            rpos = r * 0.17
+
+            if DEBUG > 0:
+                print "Position " + self.numbtns[i] + " at " + str(cpos) + "/" + str(rpos)
+
+            if b == 'Enter':
+                c_span = 105
+                cmd = lambda:self.EnterNum(varname)
+                self.numbtns[i] = Button(self.numset, text = b, font = fnbold, command = cmd, relief = rel, bg = '#EF7321')
+                self.numbtns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+            elif b == 'BS':
+                cmd = lambda:self.backspace()
+                self.numbtns[i] = Button(self.numset, text = b, font = fnbold, command = cmd, relief = rel)
+                self.numbtns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+            else:
+                self.numbtns[i] = Button(self.numset, text = b, font = fn, command = cmd, relief = rel)
+                self.numbtns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)            
+
+            c += 1
+            if c == 3:
+                r += 1
+                c = 0
+
+    def popupkeyboard(self,mtyp,varname):
+        self.keyresult = ''
+        self.display.set('')
+        self.keyset.lift(self.addset)
+
+        keylabel = Label(self.keyset, font=('Helvetica', 18), relief='sunken', borderwidth=3, bg='gray80', anchor=SW, fg='green', textvariable=self.display)
+        keylabel.place(relx=0.0, rely=0.0, height=35, width=480)
+
+        fn = ('Helvetica', 10)
+        fnbold = ('Helvetica', 10, 'bold')
+        rel = 'raised'
+
+        if mtyp == 1:
+            key = self.btn_list
+        elif mtyp == 2:
+            key = self.btn_listU
+
+        r = 1
+        c = 0
+        i = -1
+
+        for b in key:
+            i += 1
+            c_span = 35
+            r_span = 35
+            cmd = lambda x=b:self.call(x)
+            if c > 0:
+                #cpos = (c + 1) * 0.08
+                cpos = c * 0.08
+            else:
+                cpos = 0
+            rpos = r * 0.17
+
+            if DEBUG > 0:
+                print "Position " + self.btns[i] + " at " + str(cpos) + "/" + str(rpos)
+
+            if (r == 1):
+                if(c == (self.keycols - 2)): # Back Space
+                    c_span = 70
+                    cmd = lambda:self.backspace()
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                else:
+                    self.btns[i] = Button(self.keyset, text = b, font = fn, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+            elif (r == 2):
+                if b == '':
+                    next
+                else:
+                    self.btns[i] = Button(self.keyset, text = b, font = fn, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+            elif (r == 3):
+                if(c == 0): # Capslock
+                    cmd = lambda:self.CapsLock()
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                elif (c == (self.keycols - 2)): # Enter
+                    c_span = 70
+                    r_span = 70
+                    cmd = lambda:self.Enter(varname)
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel, bg = '#EF7321')
+                    self.btns[i].place(relx=cpos, rely=rpos, width = r_span)
+                else:
+                    self.btns[i] = Button(self.keyset, text = b, font = fn, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+            elif (r == 4):
+                if(c == 0): # Shift Left
+                    cmd = lambda:self.Shift()
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                elif(c == (self.keycols - 2)): # Shift Right
+                    cmd = lambda:self.Shift()
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                else:
+                    self.btns[i] = Button(self.keyset, text = b, font = fn, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+            elif (r == 5):
+                if(c == 0): # <<
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel, state=DISABLED)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                elif(c == 1): # Space
+                    c_span = 290
+                    cmd = lambda:self.call(' ')
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                elif(c == 2): # >>
+                    cpos = 0.81
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel, state=DISABLED)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+                elif(c == 3): # Clear
+                    cpos = 0.91
+                    cmd = lambda:self.clear()
+                    self.btns[i] = Button(self.keyset, text = b, font = fnbold, command = cmd, relief = rel)
+                    self.btns[i].place(relx=cpos, rely=rpos, width = c_span, height = r_span)
+
+            c += 1
+            if (c == (self.keycols - 2)):
+                if(r == 4):
+                    r += 1
+                    c = 0
+            elif(c == (self.keycols - 1)):
+                if(r == 1) or (r == 3):
+                    r += 1
+                    c = 0
+            elif (c == self.keycols):
+                r += 1
+                c = 0
+
     # MAIN TIMER for thermoGUI loop
     def timer(self):
         global root
@@ -991,7 +1285,7 @@ Temp''')
         # Disable current schedule
         if self.scheddisF.get() == 'enable':
             self.scheddisF.set('disable')
-#            self.newmode.set('cool')
+            self.newmode.set('cool')
             guischedule.set_active()
         else:
             self.scheddisF.set('enable')
@@ -1468,11 +1762,24 @@ Temp''')
         self.nhighf.set('')
 
         self.name_entry = Entry(self.addset, font=self.font12, textvariable=self.nnamef, text='')
+
         self.name_entry.place(relx=0.1, rely=0.2, height=25, width=150)
         self.low_entry  = Entry(self.addset, font=self.font12, textvariable=self.nlowf, text='')
         self.low_entry.place(relx=0.5, rely=0.2, height=25, width=85)
         self.high_entry = Entry(self.addset, font=self.font12, textvariable=self.nhighf, text='')
         self.high_entry.place(relx=0.7, rely=0.2, height=25, width=85)
+
+        eshowkey = partial(self.popupkeyboard,1,self.nnamef)
+        ebutton = Button(self.addset, text='Edit name', command=eshowkey)
+        ebutton.place(relx=0.2, rely=0.3,height=25, width=68)
+
+        shownumlow = partial(self.popupnumpad,self.nlowf)
+        lbutton = Button(self.addset, text='Edit Low', command=shownumlow)
+        lbutton.place(relx=0.5, rely=0.3,height=25, width=68)
+
+        shownumhigh = partial(self.popupnumpad,self.nhighf)
+        hbutton = Button(self.addset, text='Edit High', command=shownumhigh)
+        hbutton.place(relx=0.7, rely=0.3,height=25, width=68)
 
         savenew = partial(self.saveSetting,True)
         sbutton = Button(self.addset, text='Save', command=savenew)
