@@ -10,6 +10,10 @@ import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
         abort, render_template, flash, jsonify
 
+from operator import itemgetter
+
+from thermogui_support import *
+
 app = Flask(__name__)
 #hard to be secret in open source... >.>
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
@@ -28,6 +32,9 @@ FAN_PIN = int(config.get('main','FAN_PIN'))
 SCALE = config.get('main','SCALE')
 weatherEnabled = config.getboolean('weather','enabled')
 scheduleEnabled = config.getboolean('schedule','enabled')
+
+ip = config.get('web','ip')
+port = int(config.get('web','port'))
 
 #start the daemon in the background
 subprocess.Popen("/usr/bin/python rubustat_daemon.py start", shell=True)
@@ -56,14 +63,16 @@ if weatherEnabled == True:
 if scheduleEnabled == True:
     from schedule import schedule
     webschedule = schedule()
+    schedulename = ''
 
-    def getSched():
+    def _getSched(json=False):
+        global schedulename
         # Get the active schedule, if any
         gconn = sqlite3.connect("status.db",10)
         found = False
         # daemon status.db schedule, not the schedule class db
         cursor = gconn.execute("SELECT COUNT(datetime) FROM schedule")
-        schedulename = ''
+#        schedulename = ''
         scheduleactive = 0
         for row in cursor:
             if row[0] > 0:
@@ -77,14 +86,25 @@ if scheduleEnabled == True:
                 scheduleactive = row[1]
         gconn.close()
 
+        if json:
+            scheduledat = [
+                {
+                    'name': schedulename,
+                    'active': str (scheduleactive)
+                }
+            ]
+
+            return jsonify({'schedule': scheduledat})
+
         #print "Schedule " + schedulename + " is " + str(scheduleactive)
         if bool(scheduleactive) == True:
             schedString = "<p id=\"schedOn\"> [" + schedulename + "] ACTIVE</p>"
         else:
             schedString = "<p id=\"schedOn\"> [" + schedulename + "] inactive</p>"
+
         return schedString
 
-    def get_sched_detail(name):
+    def get_sched_detail(name, json = False):
         # Gets the current schedule for display
         global webschedule
         days = ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
@@ -111,7 +131,7 @@ if scheduleEnabled == True:
             newmode.set('off')
         setStat()
 
-def getWhatsOn():
+def _getWhatsOn():
     obStatus   = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
     heatStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
     coolStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -132,7 +152,7 @@ def getWhatsOn():
 
     return heatString + coolString + fanString
 
-def getDaemonStatus():
+def _getDaemonStatus():
     try:
         with open('rubustatDaemon.pid'):
             pid = int(subprocess.Popen("cat rubustatDaemon.pid", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -144,7 +164,7 @@ def getDaemonStatus():
     except IOError:
         return "<p id=\"daemonNotRunning\"> DAEMON IS NOT RUNNING. </p>"
 
-def getStat():
+def _getStat():
     mode = ''
     targetTemp = 0
     conn = sqlite3.connect("status.db")
@@ -188,10 +208,10 @@ def my_form():
         except:
             weatherString = "Couldn't get remote weather info! <br><br>"
 
-    whatsOn = getWhatsOn()
+    whatsOn = _getWhatsOn()
 
     if scheduleEnabled == True:
-        activeSchedule = getSched()
+        activeSchedule = _getSched()
     else:
         activeSchedule = ''
 
@@ -258,12 +278,12 @@ def my_form_post():
         conn.commit()
         conn.close()
 
-        if DEBUG == 1:
+        if DEBUG > 0:
             flash("New temperature of " + newTargetTemp + " set!")
 
         return redirect(url_for('my_form'))
     else:
-        if DEBUG == 1:
+        if DEBUG > 0:
             flash("That is not a two digit number! Try again!")
             return redirect(url_for('my_form'))
 
@@ -299,18 +319,105 @@ def updateWhatsOn():
 @app.route('/_liveSched', methods= ['GET'])
 def updateSched():
 
-    return getSched()
+    return _getSched()
 
 @app.route('/_liveSchedDetail', methods= ['GET'])
 def updateSchedDetail():
 
-    return get_sched()
+    return get_sched_detail(schedulename)
 
 @app.route('/_liveDaemonStatus', methods= ['GET'])
 def updateDaemonStatus():
 
     return getDaemonStatus()
 
+# API defs
+@app.route('/api')
+@app.route('/api/')
+def status():
+#    print(request.query_string)
+    mode = request.args.get('mode')
+    temp = request.args.get('temp')
+    if mode and temp:
+        print("Setting mode to %s\n", mode)
+        setStat(mode, temp)
+
+    (obStatus,heatStatus,coolStatus,fanStatus) = getWhatsOn()
+    (mode,target) = getStat()
+
+    statusdat = [
+        {
+            'runmode': mode,
+            'targetTemp': target,
+            'temp': float(updateTemp()),
+            'heat': heatStatus,
+            'cool': coolStatus,
+            'fan': fanStatus,
+            'units': SCALE
+        }
+    ]
+    return jsonify({'status': statusdat})
+
+@app.route('/api/schedule')
+@app.route('/api/schedule/')
+def get_active_schedule():
+    active = request.args.get('active', default=0)
+    inactive= request.args.get('inactive', default=0)
+    global webschedule
+
+    if active:
+        webschedule.set_active()
+        time.sleep(1)
+    elif inactive:
+        webschedule.set_inactive()
+        time.sleep(1)
+
+    (schedulename,scheduleactive) = getSched()
+
+    scheduledat = [
+        {
+            'name': schedulename,
+            'active': str (scheduleactive)
+        }
+    ]
+
+    return jsonify({'schedule': scheduledat})
+
+@app.route('/api/schedules')
+@app.route('/api/schedules/')
+def get_schedules():
+    schname = request.args.get('name')
+    #, default='')
+    if scheduleEnabled == True:
+        global webschedule
+        webschedule.read_schedule()
+
+        scheduledat = {}
+
+        for schedulei in webschedule.schedules:
+            setting = schedulei
+            name = str(itemgetter(0)(schedulei))
+            startday = webschedule.days[itemgetter(1)(schedulei)]
+            start = itemgetter(2)(schedulei)
+            endday = webschedule.days[itemgetter(3)(schedulei)]
+            end   = itemgetter(4)(schedulei)
+            low   = str(itemgetter(5)(schedulei))
+            high  = str(itemgetter(6)(schedulei))
+
+            if schname and (name == schname):
+                if name in scheduledat.keys():
+                    scheduledat[name].append({'startday': startday, 'start': start, 'endday': endday, 'end': end, 'low': low, 'high': high})
+                else:
+                    scheduledat[name] = [{'startday': startday, 'start': start, 'endday': endday, 'end': end, 'low': low, 'high': high}]
+            elif schname == None:
+                if name in scheduledat.keys():
+                    scheduledat[name].append({'startday': startday, 'start': start, 'endday': endday, 'end': end, 'low': low, 'high': high})
+                else:
+                    scheduledat[name] = [{'startday': startday, 'start': start, 'endday': endday, 'end': end, 'low': low, 'high': high}]
+
+        return jsonify({'schedules': scheduledat})
+
 if __name__ == "__main__":
     logging.basicConfig(filename='logs/access.log',level=logging.DEBUG)
-    app.run("0.0.0.0", port=80)
+    print("Listening on %s:%d\n" % (ip, port))
+    app.run(ip, port=port)
