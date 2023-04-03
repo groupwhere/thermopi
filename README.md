@@ -1,14 +1,16 @@
 Thermopi
 ========
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=g1nprvE12Xw0TmtTKHA5hhbtg7YEcs92)
+![alt tag](https://i.imgur.com/rGwLr60.png)
 
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=JSnFM7Qca60TKj5NHdG2WfeuK8zZUNMH)
+![alt tag](https://i.imgur.com/4npPp8V.png)
 
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=4RLIn6IQX2C5fbSumfh0O727LNQjkZEN)
+![alt tag](https://i.imgur.com/kJpVjp6.png)
 
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=nthwG4cLYCnXzwnOPOj9IPxotgp4o8Ob)
+![alt tag](https://i.imgur.com/P3pAxSZ.png)
 
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=mL9jzHtGQyOSQEZZA9eogaOHuvOmklzA)
+![alt tag](https://i.imgur.com/QRwtCw7.png)
+
+![alt tag](https://i.imgur.com/JPWBPpX.png)
 
 This project is a fork of Rubustat (info below)
 
@@ -37,7 +39,7 @@ This project is a fork of Rubustat (info below)
 	I use a JBtek 4 Channel DC 5V Relay Module which has active low inputs.  The relays are SPDT, but the goal was to ensure no power draw was required to keep them off, e.g. if the program or the Pi itself were to fail.
 
 Relay board:
-![alt tag](https://www.groupwhere.org/cdn/link.php?linkid=oYaGEmaoJ0FCzOYhxy1AXTvMdow5VKNd)
+![alt tag](https://i.imgur.com/9U0DQL7.jpg)
 
 ##Basic setup
 
@@ -105,7 +107,7 @@ There's a picture of my hardware, and screenshots of the UI on desktop and mobil
 ##Hardware
 
 * Raspberry Pi (A, B, or B+ should work)
-* Some way to hook up the GPIO pins to the thermostat hookups in your wall (I used this [nice pre-made board](http://makeatronics.blogspot.com/2013/06/24v-ac-solid-state-relay-board.html) explicitly for this purpose!)
+* Some way to hook up the GPIO pins to the thermostat hookups in your wall (I used this [nice pre-made board](http://makeatronics.blogspot.com/2013/06/24v-ac-solid-state--board.html) explicitly for this purpose!)
 * If using the board above, you should also get everything off the [parts list](https://docs.google.com/spreadsheet/ccc?key=0AtDuE3f5Cnm7dEU3MWFEeTU0RnZyTUNfVUxrX1FVdXc&usp=sharing)(Google Docs, which now requires an account?)
 * A temperature sensor. This was written with the [DS18B20](https://www.adafruit.com/products/374), but it should be pretty easy to code up your own function for your specific sensor your have on hand
 * Some way to hook your RPi up to your network. This project is infinitely more helpful when you can access the web interface.
