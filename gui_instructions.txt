@@ -1,0 +1,95 @@
+Manual for thermogui.py 05/02/2016
+
+	This is the manual for thermogui.py, a TkInter python application intended for use on a touchscreen
+connected to a Raspberry pi.  This program interacts with its support files including schedule.py and
+thermo_guisupport.py.  It also interacts with databases managed by schedule.py and rubustat_daemon.py.
+
+  I. Main page
+	1. Display Items Overview
+
+		The top row of the main page displays the current temperature and humidity depending on
+	the type of configured sensor.  The next row consists of the System Status and Target temperature
+	controls and indicators.
+
+		The next row consists of Current Conditions and Schedule.  	If weather is configured and
+	enabled, you should see the current weather under the Current Conditions heading.  If scheduling
+	is enabled, you should see the current schedule information along with a couple of control buttons.
+
+	2. Indicators and Controls
+		A. System Status
+
+			This section contains radio buttons for system selection as well as indicators for status.
+		Heat on/off, Cool on/off, Fan on/off, and overal unit condition are displayed in red for heat,
+		cyan for cold, green for fan, and white for unit status.  If the unit is running, the unit
+		status will flash once per second.  For the main systems, note for example 'heat off' vs.
+		'HEAT ON' to indicate the status of that particular system.
+
+			You can select Heat, Cool, EHeat and click the Go! button at the far right to change the
+		active system.  However, if scheduling is enabled, your selection may be overriden.  If you select
+		Off and click Go!, the schedule will be disabled and the unit will shut off.
+
+			About cooling:  If the system is running AC (COOL ON) and the unit is turned off, the system
+			will first cycle into a FAN ON mode for 30 seconds to a minute.  This is to help avoid
+			leaving condensation on the coils for the next cycle.  So, there is a delay until the unit
+			is fully off.  During this time, the unit status indicator will flash.
+
+		When the unit is off, the unit status will show 'UNIT IDLE' and this indicator will stop
+		flashing.
+
+		B. Target temperature
+
+			Using the controls marked -1, <, >, and +1, you may adjust the target temperature by
+		- one degree, - one-tenth of a degree, + one-tenth of a degree, and + one degree accordingly.
+		Activate your change by clicking on the Go! button.  Note that an active schedule may override
+		your changes since their goal is to handle temperature adjustments based on a preset range.
+
+		If scheduling is enabled in the main application config.txt file, you will see the current schedule,
+	if any, as well as two additional buttons on the main page of the GUI.  The buttons are a cycling
+	enable/disable button for disabling or enabling the current schedule and a config button for configuring
+	the schedule.
+
+		Click on enable/disable to enable or disable the schedule.  The button text will change dependent
+	upon the current schedule's active state.
+
+		Click on the center button to re-enable the current schedule.  This is only active if the schedule
+	was previously overridden (held) using the Use button in the Settings page.
+
+		Click on config to open the settings page (next section).
+
+ II. Settings page (only if scheduling is enabled)
+		Upon clicking on the config button on the main gui page, you should be presented with a popup page
+	listing schedule settings.  These settings are listed by name along with low and high temperatures:
+
+	SETTINGS:  These are named temperature ranges.  Alone, they do not contain a SCHEDULE.
+	SCHEDULE:  These are daily schedules of named temperature SETTINGS.
+
+		For each of the listed SETTINGS, you will see Edit, Delete, and Use buttons.  The most useful of these
+	is the Edit button.  Upon clicking an edit button next to one of the settings, you will be presented
+	with another popup window showing the scheduling details for this particular setting (next section).  The
+	Use button will allow you to override the currently scheduled setting, e.g. you are unexpectedly home, not
+	away, etc.
+
+III. Settings edit page
+		This page lists the scheduling details for a setting.  It contains text entries for low and high temp
+	as well as buttons for each day.  Additionally, there are two buttons under each day for start and end times.
+
+		To disable a schedule for an entire day, click on the name of the day.  This will populate the two buttons
+	below that day with an 'X', indicating that this day will be removed from the schedule.
+
+	A. Temp adjust page
+
+		To change low or high temp for this setting, touch one of the entries. You will see a new popup
+	with +/- buttons for adjusting temperature.  You can only edit low or high at one time.  This should be clear
+	because the other buttons in the popup window will be disabled.  Click Save to save this new temp or
+	Close to cancel.
+
+	B. Time adjust page
+
+		To edit start or end times for a day, click on the upper (start) or lower (end) button below each day. You
+	will see a new popup with -1h, -10m, +10m, and +1h buttons for adjusting the time by one hour or ten minutes
+	each direction.  This should wrap around at 0 hours (midnight) to 23 hours (11pm) or 01 hours (1am) depending
+	on the direction.   You can only edit start or end at one time.  This should be clear because the other
+	buttons in the popup window will be disabled.  Click Save to save this new time or Close to cancel.
+
+	Click Save to save the new setting schedule or Close to cancel.
+

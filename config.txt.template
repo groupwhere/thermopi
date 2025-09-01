@@ -1,0 +1,79 @@
+[main]
+
+#dictates logging
+DEBUG = 0
+
+# Use GPIO - only off for demo runs without GPIO
+GPIOE = 1
+
+#These two are difficult to explain.
+#Let's say we want it to be 75, and it's in cooling mode.
+#if the active_hysteresis is 0.5, it will cool to 74.5 before shutting off.
+#on the other side, if the inactive_hysteresis is 1, the system will allow 
+#the indoor temp to reach 76 before turning cooling back on.
+#adjust them to the particulars of your system / personal preference
+
+active_hysteresis = 
+inactive_hysteresis = 
+
+# C or F
+SCALE = F
+
+# GPIO Output config
+# If you want to activate on GPIO_HIGH:
+#PIN_OFF = 0
+#PIN_ON  = 1
+# IN some cases, such as the JBtek 4 Channel DC 5V Relay module, we need to
+# flip the bit the other way (active low):
+#PIN_OFF = 1
+#PIN_ON  = 0
+PIN_OFF = 
+PIN_ON  = 
+
+# 0 == Normal AC, 1 == Heat pump with aux heat
+AC_TYPE = 0
+
+HEATER_PIN = 
+AC_PIN = 
+FAN_PIN = 
+
+# Heat pump configs
+# Heat pump reversing valve
+OB_PIN = 
+# If 1, activate valve for heating
+OB_POS = 1
+# Temperature at which to engage emergency heat (heat pump only)
+emergency_temp = 40
+
+# Sensor type and pin
+# for Adafruit DHT_11 - pin number depends on where you have it connected
+#sensor_type = DHT_11
+#sensor_pin  = 14
+# for others, e.g. DS18B20, set to anything else, or modify code to handle your sensor
+sensor_type = 
+sensor_pin = 
+
+#mail notifications to alert to potential hardware problems
+[mail]
+enabled = False
+
+#how many degrees the indoor temperature can stray from the target
+#before sending alert email
+errorThreshold = 
+
+#additional mail config (servers and such) is done in mailconf.txt
+
+[sqlite]
+enabled = False
+
+#if you want external weather data on the web UI
+[weather]
+enabled = False
+#your zip/postal code. No idea if this works outside the US.
+ZIP = 
+STATE = 
+# Wunderground API code - apply at https://www.wunderground.com/weather/api/
+WUNDERGROUND = 
+
+[schedule]
+enabled = 0

@@ -1,0 +1,98 @@
+<h1 id="thermopi">Thermopi</h1>
+<figure>
+<img src="https://i.imgur.com/rGwLr60.png" alt="alt tag" /><figcaption>alt tag</figcaption>
+</figure>
+<figure>
+<img src="https://i.imgur.com/4npPp8V.png" alt="alt tag" /><figcaption>alt tag</figcaption>
+</figure>
+<figure>
+<img src="https://i.imgur.com/kJpVjp6.png" alt="alt tag" /><figcaption>alt tag</figcaption>
+</figure>
+<figure>
+<img src="https://i.imgur.com/P3pAxSZ.png" alt="alt tag" /><figcaption>alt tag</figcaption>
+</figure>
+<figure>
+<img src="https://i.imgur.com/QRwtCw7.png" alt="alt tag" /><figcaption>alt tag</figcaption>
+</figure>
+<figure>
+<img src="https://i.imgur.com/JPWBPpX.png" alt="alt tag" /><figcaption>alt tag</figcaption>
+</figure>
+<p>This project is a fork of Rubustat (info below)</p>
+<p>##Modifications * Added work-in-progress api with Home Assistant component: https://github.com/groupwhere/homeassistant-thermopi</p>
+<ul>
+<li><p>Added on screen keyboard with code modified from http://stackoverflow.com/questions/24622719/tkinter-keyboard-on-screen. Modified to use place instead of grid and incorporated into the main gui code. Created numpad version of this code. These new functions allow you to create a new setting using a touch screen. Work in progress 20 May 2016.</p></li>
+<li><p>GUI should be working to configure the schedule via the schedule class. You should now be able to disable the schedule for as long as you want it to be. You can also now override the schedule with another setting. Work in progress 07 May 2016.</p></li>
+<li><p>Added support for heat pumps. This requires 4 devices to control cool, fan, reversing valve, and emergency heat</p></li>
+<li><p>Switched weather from Yahoo to Wunderground. You will need to apply for your own key, and there is a free key available at the time of writing. Code is designed not to exceed the limitations of that free key. But, this is a hazard with developmental code.</p></li>
+<li><p>Added GUI using tkinter, sized for a 4&quot; LCD panel</p></li>
+<li><p>Uses sqlite for status and weather. Backend writes the data and the GUI or web interface simply read from that database.</p></li>
+<li><p>Added support for Adafruit DHT11 sensor for temperature and humidity. Original code uses an DS18B20 sensor, which should still be possible.</p></li>
+<li><p>Added configuration for active high or low GPIO output. I use a JBtek 4 Channel DC 5V Relay Module which has active low inputs. The relays are SPDT, but the goal was to ensure no power draw was required to keep them off, e.g. if the program or the Pi itself were to fail.</p></li>
+</ul>
+<p>Relay board: <img src="https://i.imgur.com/9U0DQL7.jpg" alt="alt tag" /></p>
+<p>##Basic setup</p>
+<ol type="1">
+<li><p>Copy the config.txt.template to config.txt</p></li>
+<li><p>Edit the above for your GPIO pins, ac type, etc.</p></li>
+<li><p>To have the web interface and daemon automatically start on boot:</p>
+<p>sudo nano /etc/rc.local to include the following:</p>
+<pre><code> modprobe w1-gpio
+ modprobe w1-therm
+ /bin/rm -rf /root/thermopi/rubustatDaemon.pid
+ python /root/thermopi/rubustat_web_interface.py &amp;</code></pre></li>
+<li><p>(Optional) After you get your LCD display working, you will probably want to dedicate its use to the thermostat GUI.</p>
+<p>sudo nano /etc/xdg/lxsession/LXDE-pi/autostart and modify to include only these lines:</p>
+<pre><code> @openbox
+ @sudo python /root/thermopi/thermogui.py</code></pre></li>
+<li><p>If using the DHT11 sensor, checkout/clone https://github.com/adafruit/Adafruit_Python_DHT.git</p></li>
+</ol>
+<p>The daemon can be started with <code>python rubustat_daemon.py start.</code></p>
+<p>First run of, e.g., <code>python thermogui.py</code> will also start the daemon.</p>
+<p>After the first run, two sqlite databases will be created:</p>
+<pre><code>status.db (temperature readings, weather, unit status)
+temperatureLogs.db (history)</code></pre>
+<h1 id="rubustat">Rubustat</h1>
+<p>A thermostat controller for Raspberry Pi on Flask</p>
+<p>Mostly based off: http://makeatronics.blogspot.com/2013/04/thermostat-software.html</p>
+<p>but now with user-friendly web interface!</p>
+<p><strong><em>NOTE</em></strong> I am not a designer, and this UI was primarily for my dad / his phone. Small screens + aging eyes means <strong><em>BIG NUMBERS!</em></strong></p>
+<p>##Contact</p>
+<p>I would LOVE if you <a href="mailto:rubustatcontact@wyattwinters.com">threw me an email</a> if you decide to use any of this code for your own RPi-based thermostat. It doesn’t have to be long or involved, but knowing my work is used outside of my house would be great!</p>
+<p>If you want to donate, you can send me BTC at 1Dz6YehDXZk2GBCYi9SfWRSPZAEndmQxk5, or donate to other, bigger open source projects that will actually use the funding to further development. On the topic of RPi, why not <a href="http://www.raspbian.org/RaspbianDonate">Raspbian</a>?</p>
+<p>##Forks!</p>
+<p><span class="citation" data-cites="aneisch">@aneisch</span> has forked this project, and is adding cool stuff like scheduling! You can find his fork either from the fork menu, or just click <a href="https://github.com/aneisch/Rubustat">here</a>. Thanks for doing cool stuff <span class="citation" data-cites="aneisch">@aneisch</span>!</p>
+<p>While not strictly a fork, <span class="citation" data-cites="madbrenner">@madbrenner</span> has created <a href="https://gitlab.com/madbrenner/PyStat">PyStat</a> which features a <a href="https://imgur.com/a/7vkZO">much nicer UI</a>. As an added bonus, the code appears to be <em>WAY LESS</em> of a hacky mess compared to mine. You should really check it out. It’s probably what you should use instead.</p>
+<p>##Pictures!</p>
+<p>There’s a picture of my hardware, and screenshots of the UI on desktop and mobile browsers over on <a href="http://wyattwinters.com/rubustat-the-raspberry-pi-thermostat.html">my blog</a>.</p>
+<p>##Hardware</p>
+<ul>
+<li>Raspberry Pi (A, B, or B+ should work)</li>
+<li>Some way to hook up the GPIO pins to the thermostat hookups in your wall (I used this <a href="http://makeatronics.blogspot.com/2013/06/24v-ac-solid-state--board.html">nice pre-made board</a> explicitly for this purpose!)</li>
+<li>If using the board above, you should also get everything off the <a href="https://docs.google.com/spreadsheet/ccc?key=0AtDuE3f5Cnm7dEU3MWFEeTU0RnZyTUNfVUxrX1FVdXc&amp;usp=sharing">parts list</a>(Google Docs, which now requires an account?)</li>
+<li>A temperature sensor. This was written with the <a href="https://www.adafruit.com/products/374">DS18B20</a>, but it should be pretty easy to code up your own function for your specific sensor your have on hand</li>
+<li>Some way to hook your RPi up to your network. This project is infinitely more helpful when you can access the web interface.</li>
+</ul>
+<p>##Dependencies * RPi.GPIO (you probably already have it installed on your Pi) * Flask (sudo apt-get install python-flask on Ubuntu, Debian, Raspbian, and likely other apt based distros) * kernel modules w1-gpio and w1-therm (unsure if these are default in Raspbian, but make sure you have them)</p>
+<p>###Optional (required if enabled in config.txt) * sqlite for less-sloppy logging (sudo apt-get install python-sqlite sqlite3) * pywapi for weather info (sudo pip install pywapi)</p>
+<p>##Installation</p>
+<ol type="1">
+<li>git clone https://github.com/wywin/Rubustat.git</li>
+<li>copy config.txt.template to config.txt and edit with appropriate values</li>
+<li>copy mailconf.txt.template to mailconf.txt and fill in values (if using error mails)</li>
+<li>(optional) add web interface to startup. I added the lines</li>
+</ol>
+<pre><code>modprobe w1-gpio</code></pre>
+<pre><code>modprobe w1-therm</code></pre>
+<pre><code>/usr/bin/python /home/pi/src/Rubustat/rubustat_web_interface.py &amp;</code></pre>
+<p>to /etc/rc.local, and it works without a hitch. Although the modprobes are also in getIndoorTemp, I added them before the web interface call because it was throwing fits without the pre-call modprobes… ¯\<em>(ツ)</em>/¯</p>
+<p>###Code Map</p>
+<p>#####The configs * config.txt.template - the main config file, heavily commented to help you make sense of it. Enable optional features here! * mailconf.txt.template - a template for the mail configuration. Fill in the values, enable mail in config.txt, and get helpful error email alerts! These are used to hopefully inform you of potential hardware issues. This is from when one of my alligator clips fell off, and it was really hot when I got home. * status - target temperature (in degrees F, because I’m an awful American) and mode (cool or heat) - this can be edited by hand, or via the web UI</p>
+<p>#####The code * daemon.py - the underlying daemon class from <a href="http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/">here</a>. I added on some stale-pid checking. * rubustat_daemon.py - the proper daemon. Reads from status, controls the GPIO pins, and does email notifications, if enabled, and sqlite logging, if enabled * rubustat_web_interface.py - the web interface. Auto launches rubustat_daemon.py, and writes to status. Optionally displays local weather conditions, dictated by the ZIP code in config.txt. You will have to adjust getWeather to strip off the annoying link from the bottom of the API result. * static/ and templates/ - various html, css, and js to make the web interface fancy. NOT AT ALL standards compliant, but it works, so I’m happy with it.</p>
+<p>####Credits In no particular order:</p>
+<p>http://matthewjamestaylor.com/blog/equal-height-columns-2-column.htm</p>
+<p>https://github.com/ftlabs/fastclick</p>
+<p>http://proto.io/freebies/onoff/</p>
+<p>http://blog.jacobean.net/?p=678</p>
+<p>http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/</p>
+<p>http://segfault.in/2010/12/sending-gmail-from-python/</p>
+<p>http://tmpvar.com/markdown.html</p>
