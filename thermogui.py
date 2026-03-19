@@ -120,9 +120,9 @@ class thermoGUI:
 
         (mode,targetTemp) = getStat()
         if DEBUG > 0:
-            print "Initial setup:"
-            print "  MODE = " + mode
-            print "  TEMP = " + str(targetTemp)
+            print("Initial setup:")
+            print("  MODE = " + mode)
+            print("  TEMP = " + str(targetTemp))
         self.newmode.set(mode)
         self.targetTempf.set(targetTemp)
 
@@ -973,7 +973,7 @@ Temp''')
             if len(b) == 1:
                 cmd = lambda x=b:self.call(x)
                 if DEBUG > 0:
-                    print "Setting text of self.btns[" + str(i) + "] to " + b
+                    print("Setting text of self.btns[" + str(i) + "] to " + b)
                 self.btns[i].configure(text=b,command=cmd)
 
     def popupnumpad(self,varname):
@@ -1012,7 +1012,7 @@ Temp''')
             rpos = r * 0.17
 
             if DEBUG > 0:
-                print "Position " + self.numbtns[i] + " at " + str(cpos) + "/" + str(rpos)
+                print("Position " + self.numbtns[i] + " at " + str(cpos) + "/" + str(rpos))
 
             if b == 'Enter':
                 c_span = 105
@@ -1066,7 +1066,7 @@ Temp''')
             rpos = r * 0.17
 
             if DEBUG > 0:
-                print "Position " + self.btns[i] + " at " + str(cpos) + "/" + str(rpos)
+                print("Position " + self.btns[i] + " at " + str(cpos) + "/" + str(rpos))
 
             if (r == 1):
                 if(c == (self.keycols - 2)): # Back Space
@@ -1146,7 +1146,7 @@ Temp''')
         global root
         root.after(5000, self.timer)
         if DEBUG > 0:
-            print "Updating..."
+            print("Updating...")
 
         (humidity,indoorTemp) = updateTemp()
         self.humidityf.set(humidity)
@@ -1176,10 +1176,10 @@ Temp''')
         idling = False
 
         if DEBUG > 0:
-            print "obStatus:   " + str(obStatus)
-            print "heatStatus: " + str(heatStatus)
-            print "coolStatus: " + str(coolStatus)
-            print "fanStatus:  " + str(fanStatus)
+            print("obStatus:   " + str(obStatus))
+            print("heatStatus: " + str(heatStatus))
+            print("coolStatus: " + str(coolStatus))
+            print("fanStatus:  " + str(fanStatus))
 
         if AC_TYPE == 0:
             # Standard AC
@@ -1222,9 +1222,9 @@ Temp''')
             self.idlestat.config(foreground='white')
 
         if DEBUG > 0:
-            print "heatStringf: " + self.heatStringf.get()
-            print "coolStringf: " + self.coolStringf.get()
-            print "fanStringf:  " + self.fanStringf.get()
+            print("heatStringf: " + self.heatStringf.get())
+            print("coolStringf: " + self.coolStringf.get())
+            print("fanStringf:  " + self.fanStringf.get())
 
         if weatherEnabled == True:
             weatherstring = getWeather()
@@ -1237,8 +1237,8 @@ Temp''')
             (schedulename,scheduleactive) = getSched()
 
             if DEBUG > 0:
-                print "Schedule name:   " + schedulename
-                print "Schedule active: " + str(scheduleactive)
+                print("Schedule name:   " + schedulename)
+                print("Schedule active: " + str(scheduleactive))
 
             if scheduleactive == True and guischedule.active == True:
                 self.newmode.set(mode)
@@ -1270,7 +1270,7 @@ Temp''')
     def setstat(self):
         temp_mode = self.newmode.get()
         if DEBUG > 0:
-            print "New mode: " + temp_mode
+            print("New mode: " + temp_mode)
         temp_targetTemp = self.targetTempf.get()
         setStat(temp_mode,temp_targetTemp)
 
@@ -1418,13 +1418,13 @@ Temp''')
             eminin = ''
 
         if DEBUG > 0:
-            print "timeAdj()"
-            print "shourin:   " + shourin
-            print "sminin:    " + sminin
-            print "ehourin:   " + ehourin
-            print "eminin:    " + eminin
-            print "startonly: " + str(startonly)
-            print "endonly:   " + str(endonly)
+            print("timeAdj()")
+            print("shourin:   " + shourin)
+            print("sminin:    " + sminin)
+            print("ehourin:   " + ehourin)
+            print("eminin:    " + eminin)
+            print("startonly: " + str(startonly))
+            print("endonly:   " + str(endonly))
 
         # Normalize setup
         self.startonly.set(False)
@@ -1482,11 +1482,11 @@ Temp''')
 
         if shour and smin and not endonly:
             if DEBUG > 0:
-                print "Setting startf[" + str(i) + "] to " + str(shour) + ':' + str(smin)
+                print("Setting startf[" + str(i) + "] to " + str(shour) + ':' + str(smin))
             self.startf[i].set(str(shour) + ':' + str(smin))
         if ehour and emin and not startonly:
             if DEBUG > 0:
-                print "Setting endf[" + str(i) + "] to " + str(ehour) + ':' + str(emin)
+                print("Setting endf[" + str(i) + "] to " + str(ehour) + ':' + str(emin))
             self.endf[i].set(str(ehour) + ':' + str(emin))
 
     def ltempinc(self):
@@ -1509,12 +1509,12 @@ Temp''')
         self.tempset.lift(self.editset)
 
         if DEBUG > 0:
-            print "tempAdj()"
-            print "Name:      " + name
-            print "Low Temp:  " + str(lowtemp)
-            print "High Temp: " + str(hightemp)
-            print "Lowonly:   " + str(lowonly)
-            print "Highonly:  " + str(highonly)
+            print("tempAdj()")
+            print("Name:      " + name)
+            print("Low Temp:  " + str(lowtemp))
+            print("High Temp: " + str(hightemp))
+            print("Lowonly:   " + str(lowonly))
+            print("Highonly:  " + str(highonly))
 
         # Normalize setup
         self.lowonly.set(False)
@@ -1553,7 +1553,7 @@ Temp''')
     # FIXME
     def saveTemp(self):
         if DEBUG > 0:
-            print "saveTemp()"
+            print("saveTemp()")
         self.nlowf.set(self.lowtemp.get())
         self.nhighf.set(self.hightemp.get())
 
@@ -1636,7 +1636,7 @@ Temp''')
 
     def activateSetting(self,name):
         if DEBUG > 0:
-            print "ACTIVATE/OVERRIDE: " + name
+            print("ACTIVATE/OVERRIDE: " + name)
         res = guischedule.hold(name)
         setSched(name)
         self.schedresF.set('resume')
@@ -1686,7 +1686,7 @@ Temp''')
                 calltimee = partial(self.timeAdj, start, end, name, 'scheduled setting',False,True, i)
 
                 if DEBUG > 0:
-                    print "Setting up button for " + str(startday) + " at " + start + ", " + str(endday) + " at " + end
+                    print("Setting up button for " + str(startday) + " at " + start + ", " + str(endday) + " at " + end)
                 if startday == i and endday == i:
                     # Starts and ends this day
                     #cd.configure(state=ACTIVE)
@@ -1738,11 +1738,11 @@ Temp''')
 
     def attach_btn(self,k,i):
 #        self.setday.append(k)
-        print i
-        print k
+        print(i)
+        print(k)
         self.startf[i].set('X')
         self.endf[i].set('X')
-        print "Disabled " + k
+        print("Disabled " + k)
 
     def deleteSetting(self,name):
         res = guischedule.del_setting(name)
@@ -1800,10 +1800,10 @@ Temp''')
             end   = { 0 : [], 1 : [], 2 : [], 3 : {}, 4 : [], 5 : [], 6 : []}
 
             for i in range(0,len(self.startf)):
-                print self.startf[i].get()
+                print(self.startf[i].get())
                 start[i] = self.startf[i].get()# + ':00'
             for i in range(0,len(self.endf)):
-                print self.endf[i].get()
+                print(self.endf[i].get())
                 end[i] = self.endf[i].get()# + ':00'
             #print start
             #print end

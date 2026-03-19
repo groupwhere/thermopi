@@ -9,7 +9,7 @@ import subprocess
 import re
 import time
 import datetime
-import ConfigParser
+import configparser
 import logging
 import sqlite3
 from operator import itemgetter
@@ -20,7 +20,7 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
 ZIP = config.get('weather','ZIP')
@@ -95,7 +95,7 @@ if scheduleEnabled == True:
                 scheduleactive = row[1]
         gconn.close()
 
-        #print "Schedule " + schedulename + " is " + str(scheduleactive)
+        #print("Schedule " + schedulename + " is " + str(scheduleactive))
         return str(schedulename),bool(scheduleactive)
 
     def setSched(name):
@@ -109,7 +109,7 @@ if scheduleEnabled == True:
         gconn.close()
 
         if DEBUG > 0:
-            print "SCHEDULE OVERRIDE SET TO " + name
+            print("SCHEDULE OVERRIDE SET TO " + name)
 
     def get_sched(name):
         # Gets the current schedule for display
@@ -137,9 +137,9 @@ if scheduleEnabled == True:
 # Main program functions
 def getWhatsOn():
     if DEBUG > 0:
-        print "Called getWhatsOn\n"
+        print("Called getWhatsOn\n")
     if GPIOE == False:
-        print "NO GPIO"
+        print("NO GPIO")
         return (0,0,0,0)
     if PIN_ON == 1:
         obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
@@ -168,7 +168,7 @@ def getDaemonStatus():
 
 def getStat():
     if DEBUG > 0:
-        print "Called getStat\n"
+        print("Called getStat\n")
 
     mode = ''
     targetTemp = 0
@@ -202,7 +202,7 @@ def getStat():
 def setStat(mode,target):
     #    match = re.search(r'^\d{2,4}$',target)
     if DEBUG > 0:
-        print "Setting new mode, temp to: " + mode + ', ' + target
+        print("Setting new mode, temp to: " + mode + ', ' + target)
 
     gconn = sqlite3.connect("status.db",timeout=10)
     c = gconn.cursor()
@@ -222,7 +222,7 @@ def setStat(mode,target):
 def updateTemp():
     global humidity, indoorTemp
     if DEBUG > 0:
-        print "Called updateTemp\n"
+        print("Called updateTemp\n")
 
     gconn = sqlite3.connect("status.db",timeout=10)
     found = False

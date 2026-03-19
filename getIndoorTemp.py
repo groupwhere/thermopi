@@ -5,9 +5,9 @@
 import subprocess
 import glob
 import time
-import ConfigParser
+import configparser
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read("config.txt")
 
 def getIndoorTemp():

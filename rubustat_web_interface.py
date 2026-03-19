@@ -4,7 +4,7 @@ import subprocess
 import re
 import time
 import datetime
-import ConfigParser
+import configparser
 import logging
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
@@ -22,7 +22,7 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-config = ConfigParser.ConfigParser()
+config = configparser.configparser()
 config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
 HEATER_PIN = int(config.get('main','HEATER_PIN'))

@@ -2,12 +2,12 @@
 
 import sqlite3
 import datetime
-import ConfigParser
+import configparser
 #import calendar
 #import pprint
 from operator import itemgetter
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read("config.txt")
 
 DEBUG = int(config.get('main','DEBUG'))
@@ -90,8 +90,8 @@ class schedule():
 
         for row in c.execute('SELECT active FROM activation'):
             self.active = row[0]
-#        print self.settings
-#        print self.schedules
+#        print(self.settings)
+#        print(self.schedules)
         scconn.close()
         self.clean_schedule()
         self.check_hold()
@@ -135,7 +135,7 @@ class schedule():
         self.set_current()
 
         if DEBUG > 0:
-            print "schedule.nohold: Schedule override removed." 
+            print("schedule.nohold: Schedule override removed.")
 
     def hold(self,name):
         # Set and hold a schedule setting (override schedule)
@@ -143,7 +143,7 @@ class schedule():
         now = datetime.datetime.now()
         today = now.weekday()
         res = filter(lambda t: t[0] == name, self.settings)
-        #print res[0]
+        #print(res[0])
 
         newres = [(res[0][0], today, '0:00:00', today, '23:59:59', res[0][1], res[0][2])]
         self.current = newres
@@ -157,12 +157,12 @@ class schedule():
         scconn.commit()
         scconn.close()
         if DEBUG > 0:
-            print "schedule.hold: Override schedule and set: " + name
-            print res
+            print("schedule.hold: Override schedule and set: " + name)
+            print(res)
 
     def del_setting(self,name):
         if DEBUG > 0:
-            print "schedule.del_setting: Deleting: " + name
+            print("schedule.del_setting: Deleting: " + name)
         scconn = sqlite3.connect("schedule.db")
         c = scconn.cursor()
         c.execute("DELETE FROM settings WHERE sename=?", (name,))
@@ -186,26 +186,26 @@ class schedule():
             self.read_schedule()
             return True
         else:
-            print "schedule.savesetting: bad data!"
+            print("schedule.savesetting: bad data!")
             return False
 
     def save_schedule(self,setting,new,start,end):
         if DEBUG > 0:
-            print "schedule.save_schedule:"
-            print setting
-            print start
-            print end
+            print("schedule.save_schedule:")
+            print(setting)
+            print(start)
+            print(end)
 
         if setting[0] and setting[1] and setting[2]:
             scconn = sqlite3.connect("schedule.db")
             c = scconn.cursor()
             if new == True:
                 if DEBUG > 0:
-                    print "schedule.save_schedule: INSERT INTO settings (sename,low,high) VALUES (?,?,?)", (setting[0],float(setting[1]),float(setting[2]))
+                    print("schedule.save_schedule: INSERT INTO settings (sename,low,high) VALUES (?,?,?)", (setting[0],float(setting[1]),float(setting[2])))
                 c.execute("INSERT INTO settings (sename,low,high) VALUES (?,?,?)", (setting[0],float(setting[1]),float(setting[2])))
             else:
                 if DEBUG > 0:
-                    print "schedule.save_schedule: UPDATE settings SET low=?,high=? WHERE sename=?", (float(setting[1]),float(setting[2]),setting[0])
+                    print("schedule.save_schedule: UPDATE settings SET low=?,high=? WHERE sename=?", (float(setting[1]),float(setting[2]),setting[0]))
                 c.execute("UPDATE settings SET low=?,high=? WHERE sename=?", (float(setting[1]),float(setting[2]),setting[0]))
                 scconn.commit()
 
@@ -216,14 +216,14 @@ class schedule():
             for i in range(0,7):
                 startday = i
                 endday = i
-                print "schedule.save_schedule: Checking schedule " + setting[0] + " for " + self.days[i]
+                print("schedule.save_schedule: Checking schedule " + setting[0] + " for " + self.days[i])
                 if start[i] == '' and end[i] == '':
                     if DEBUG > 0:
-                        print "schedule.save_schedule: Start and end times cancelled. No new data to insert."
+                        print("schedule.save_schedule: Start and end times cancelled. No new data to insert.")
                     continue
                 elif start[i] == 'X' and end[i] == 'X':
                     if DEBUG > 0:
-                        print "schedule.save_schedule: Start and end times cancelled. No new data to insert."
+                        print("schedule.save_schedule: Start and end times cancelled. No new data to insert.")
                     continue
                 elif start[i] == 'X' or start[i] == '':
                     startday = -1
@@ -241,7 +241,7 @@ class schedule():
                     if len(end[i]) < 8:
                         end[i] = end[i] + ':00'
                 if DEBUG > 0:
-                    print "schedule.save_schedule: start[i] and end[i] present..." + start[i] + ", " + end[i]
+                    print("schedule.save_schedule: start[i] and end[i] present..." + start[i] + ", " + end[i])
                 c.execute('INSERT INTO schedule VALUES (?,?,?,?,?)', (setting[0], startday, start[i], endday, end[i]))
                 scconn.commit()
 
@@ -249,7 +249,7 @@ class schedule():
             self.read_schedule()
             return True
         else:
-            print "schedule.save_schedule: bad data!"
+            print("schedule.save_schedule: bad data!")
             return False
 
     def get_one(self,name):
@@ -285,7 +285,7 @@ class schedule():
             end   = itemgetter(4)(schedule)
             low   = str(itemgetter(5)(schedule))
             high  = str(itemgetter(6)(schedule))
-            print name + ": starts " + startday + " at " + start + " and ends " + endday + " at " + end + " with min/max temp of " + low + "/" + high + "."
+            print(name + ": starts " + startday + " at " + start + " and ends " + endday + " at " + end + " with min/max temp of " + low + "/" + high + ".")
 
     def set_schedule(self):
         if working:
@@ -296,14 +296,14 @@ class schedule():
         if self.current:
             if DEBUG > 0:
                 if self.active == True:
-                    print "schedule.check_schedule: Schedule currently active!"
+                    print("schedule.check_schedule: Schedule currently active!")
                 else:
-                    print "schedule.check_schedule: Schedule currently inactive!"
-                print schedule
+                    print("schedule.check_schedule: Schedule currently inactive!")
+                print(schedule)
 
     def save_active(self):
         if DEBUG > 0:
-            print "schedule.save_active(" + str(self.active) + ")"
+            print("schedule.save_active(" + str(self.active) + ")")
         scconn = sqlite3.connect("schedule.db")
         c = scconn.cursor()
         c.execute('DELETE FROM activation');
@@ -314,21 +314,21 @@ class schedule():
 
     def set_active(self):
         if DEBUG > 0:
-            print "schedule.set_active: Setting schedule to active."
+            print("schedule.set_active: Setting schedule to active.")
         self.active = True
         self.save_active()
 
     def set_inactive(self):
         if DEBUG > 0:
-            print "schedule.set_inactive: Setting schedule to inactive."
+            print("schedule.set_inactive: Setting schedule to inactive.")
         self.active = False
         self.save_active()
 
     def set_current(self):
         if self.holding == True:
             if DEBUG > 0:
-                print "schedule.set_current: Schedule hold set to "
-                print self.current
+                print("schedule.set_current: Schedule hold set to ")
+                print(self.current)
             return self.current
         # Set the current schedule based on the current date, time, and available schedules
         now = datetime.datetime.now()
@@ -345,50 +345,50 @@ class schedule():
             self.read_schedule()
 
         if DEBUG > 1:
-            print "schedule.set_current: Today is " + self.days[today] + "(" + str(today) + ") and the time is " + mytimestr
+            print("schedule.set_current: Today is " + self.days[today] + "(" + str(today) + ") and the time is " + mytimestr)
 
         for schedule in self.schedules:
             if DEBUG > 1:
-                print "schedule.set_current: Checking: " + str(schedule)
+                print("schedule.set_current: Checking: " + str(schedule))
             if itemgetter(1)(schedule) == today:
                 #(u'Away', 2, u'06:30:00', 1, u'17:00:00', 65.0, 77.0)
                 if DEBUG > 1:
-                    print "schedule.set_current: Schedule START match for " + itemgetter(0)(schedule) + " on " + self.days[itemgetter(1)(schedule)]
+                    print("schedule.set_current: Schedule START match for " + itemgetter(0)(schedule) + " on " + self.days[itemgetter(1)(schedule)])
                 if itemgetter(2)(schedule) == mytimestr:
                     # pointless
                     if DEBUG > 1:
-                        print "schedule.set_current: Schedule match for right now!"
+                        print("schedule.set_current: Schedule match for right now!")
                 elif itemgetter(2)(schedule) < mytimestr and mytimestr < itemgetter(4)(schedule):
                     if DEBUG > 1:
-                        print "schedule.set_current: a. We are in this window now!"
-                        print "schedule.set_current: a. start at: " + itemgetter(2)(schedule) + " < now: " + mytimestr
+                        print("schedule.set_current: a. We are in this window now!")
+                        print("schedule.set_current: a. start at: " + itemgetter(2)(schedule) + " < now: " + mytimestr)
                     self.current = schedule
                     break
                 elif int(itemgetter(3)(schedule)) == int(itemgetter(1)(schedule)) + 1:
                     if DEBUG > 1:
-                        print "schedule.set_current: a. We are in this window now!"
-                        print "schedule.set_current: a. Ends after today"
+                        print("schedule.set_current: a. We are in this window now!")
+                        print("schedule.set_current: a. Ends after today")
                     self.current = schedule
                     break
                 else:
                     if DEBUG > 1:
-                        print "schedule.set_current: a. No end match.  NOT in this schedule..."
+                        print("schedule.set_current: a. No end match.  NOT in this schedule...")
             elif itemgetter(3)(schedule) == today:
                 if DEBUG > 1:
-                    print "schedule.set_current: Schedule END match for " + itemgetter(0)(schedule)
+                    print("schedule.set_current: Schedule END match for " + itemgetter(0)(schedule))
                 if itemgetter(4)(schedule) == mytimestr:
                     # pointless
                     if DEBUG > 1:
-                        print "schedule.set_current: Schedule match for right now!"
+                        print("schedule.set_current: Schedule match for right now!")
                 elif mytimestr < itemgetter(4)(schedule) and itemgetter(2)(schedule) < mytimestr:
                     if DEBUG > 1:
-                        print "schedule.set_current: b. We are in this window now!"
-                        print "schedule.set_current: b. now: " + mytimestr + " < end at: " + itemgetter(4)(schedule)
+                        print("schedule.set_current: b. We are in this window now!")
+                        print("schedule.set_current: b. now: " + mytimestr + " < end at: " + itemgetter(4)(schedule))
                     self.current = schedule
                     break
                 else:
                     if DEBUG > 1:
-                        print "schedule.set_current: b. NOT in this schedule..."
+                        print("schedule.set_current: b. NOT in this schedule...")
 
         return self.current
 
@@ -397,7 +397,7 @@ tschedule.read_schedule()
 #tschedule.print_schedule()
 #tschedule.hold('Home')
 tschedule.set_current()
-#print tschedule.current
-#print tschedule.schedules
-#print tschedule.settings
-#print tschedule.settings[0][0]
+#print(tschedule.current)
+#print(tschedule.schedules)
+#print(tschedule.settings)
+#print(tschedule.settings[0][0])

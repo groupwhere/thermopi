@@ -5,8 +5,8 @@ import subprocess
 import os
 import time
 import datetime
-import ConfigParser
-import urllib2
+import configparser
+import urllib
 import json
 from daemon import Daemon
 from getIndoorTemp import getIndoorTemp
@@ -22,7 +22,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 #read values from the config file
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
 GPIOE = int(config.get('main','GPIOE'))
@@ -251,7 +251,7 @@ class rubustatDaemon(Daemon):
         url = 'http://api.wunderground.com/api/' + str(WUNDERGROUND) + '/geolookup/conditions/q/' + STATE + '/' + ZIP + '.json'
 #        if DEBUG >= 1:
 #            print "Fetching " + url + "\n"
-        f = urllib2.urlopen(url)
+        f = urllib.urlopen(url)
         json_string = f.read()
         parsed_json = json.loads(json_string)
         city = parsed_json['location']['city']
@@ -364,7 +364,7 @@ class rubustatDaemon(Daemon):
                 now = datetime.datetime.now()
                 # Set the current schedule
                 if DEBUG >= 1:
-                    print "Checking schedule"
+                    print("Checking schedule")
                 #if self.dschedule.holding == False:
                 self.dschedule.read_schedule()
                 self.dschedule.set_current()
@@ -539,7 +539,7 @@ class rubustatDaemon(Daemon):
                 else: # OFF
                     hvacState = self.idle()
             else:
-                print "It broke."
+                print("It broke.")
 
             #loggin'stuff
             if DEBUG >= 1:
@@ -602,10 +602,10 @@ if __name__ == "__main__":
         elif 'restart' == sys.argv[1]:
             daemon.restart()
         else:
-            print "Unknown command"
+            print("Unknown command")
             sys.exit(2)
             sys.exit(0)
     else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
+        print("usage: %s start|stop|restart" % sys.argv[0])
         sys.exit(2)
 
