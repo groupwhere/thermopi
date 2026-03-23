@@ -139,6 +139,17 @@ class rubustatDaemon(Daemon):
                 else:
                     #broken
                     return 2
+            elif AC_TYPE == 11:
+                # Swamp cooler
+                if coolStatus == PIN_ON and fanStatus == PIN_ON:
+                    #cooling
+                    return -1
+                elif heatStatus == PIN_OFF and coolStatus == PIN_OFF and fanStatus == PIN_OFF:
+                    #idle
+                    return 0
+                else:
+                    #broken
+                    return 2
             else:
                 # Heat pump
                 if heatStatus == PIN_ON and fanStatus == PIN_ON and coolStatus == PIN_OFF and obStatus == PIN_OFF:
@@ -171,6 +182,10 @@ class rubustatDaemon(Daemon):
                 GPIO.output(AC_PIN, PIN_ON)
                 GPIO.output(FAN_PIN, PIN_ON)
                 return -1
+            elif AC_TYPE == 11:
+                GPIO.output(AC_PIN, PIN_ON)
+                GPIO.output(FAN_PIN, PIN_ON)
+                return -1
             else:
                 GPIO.output(HEATER_PIN, PIN_OFF)
                 GPIO.output(OB_PIN, PIN_OFF)
@@ -192,6 +207,10 @@ class rubustatDaemon(Daemon):
                 GPIO.output(AC_PIN, PIN_OFF)
                 GPIO.output(FAN_PIN, PIN_ON)
                 return 1
+            elif AC_TYPE == 11:
+                GPIO.output(AC_PIN, PIN_OFF)
+                GPIO.output(FAN_PIN, PIN_OFF)
+                return 1
             else:
                 GPIO.output(HEATER_PIN, PIN_OFF)
                 GPIO.output(OB_PIN, PIN_ON)
@@ -212,6 +231,8 @@ class rubustatDaemon(Daemon):
                 GPIO.output(HEATER_PIN, PIN_ON)
                 GPIO.output(AC_PIN, PIN_OFF)
                 GPIO.output(FAN_PIN, PIN_ON)
+                return 1
+            if AC_TYPE == 11:
                 return 1
             else:
                 GPIO.output(HEATER_PIN, PIN_ON)

@@ -254,8 +254,9 @@ humidity''')
         self.rb0.configure(disabledforeground="white")
         self.rb0.configure(highlightbackground="black")
         self.rb0.configure(justify=LEFT)
-        self.rb0.configure(text='Heat')
-        self.rb0.configure(value='heat')
+        if AC_TYPE != 11:
+            self.rb0.configure(text='Heat')
+            self.rb0.configure(value='heat')
         self.rb0.configure(variable=self.newmode)
         self.rb0.configure(anchor=W)
 
@@ -284,8 +285,9 @@ humidity''')
         self.rb2.configure(disabledforeground="white")
         self.rb2.configure(highlightbackground="black")
         self.rb2.configure(justify=LEFT)
-        self.rb2.configure(text='EHeat')
-        self.rb2.configure(value='eheat')
+        if AC_TYPE != 11:
+            self.rb2.configure(text='EHeat')
+            self.rb2.configure(value='eheat')
         self.rb2.configure(variable=self.newmode)
         self.rb2.configure(anchor=W)
 
@@ -1203,6 +1205,7 @@ Temp''')
                 self.fanStringf.set("fan off")
         elif AC_TYPE == 11:
             # Swamp cooler
+            self.heatStringf.set("")
             if coolStatus == 1:
                 self.coolStringf.set("COOL ON")
             else:
