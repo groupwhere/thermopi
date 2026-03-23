@@ -22,7 +22,7 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-config = configparser.configparser()
+config = configparser.ConfigParser()
 config.read("config.txt")
 DEBUG = int(config.get('main','DEBUG'))
 HEATER_PIN = int(config.get('main','HEATER_PIN'))
@@ -140,7 +140,7 @@ def _getWhatsOn():
         coolStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
         fanStatus  = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
     except:
-        print("No GPIO present"
+        print("No GPIO present")
 
     obString   = "<p id=\"heat\"> heat off </p>"
     heatString = "<p id=\"heat\"> heat off </p>"
@@ -156,7 +156,7 @@ def _getWhatsOn():
         if fanStatus == 1:
             fanString = "<p id=\"fanOn\"> FAN ON </p>"
     except:
-        print("No GPIO present"
+        print("No GPIO present")
     return heatString + coolString + fanString
 
 def _getDaemonStatus():
