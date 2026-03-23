@@ -79,8 +79,11 @@ class Daemon:
             #there's no process with that pid, so the pidfile is stale!
             return True
         #there is a process with the given pid. Is it the daemon?
-        cmdline = subprocess.Popen("cat /proc/" + str(pid) + "/cmdline", shell=True, stdout=subprocess.PIPE).stdout.read()
-        match = re.search(r'rubustat_daemon.py',cmdline)
+        try:
+            cmdline = subprocess.Popen("cat /proc/" + str(pid) + "/cmdline", shell=True, stdout=subprocess.PIPE).stdout.read()
+            match = re.search(r'rubustat_daemon.py',cmdline)
+        except:
+            match = ""
         if match:
             #the pidfile points to an active instance of the daemon. pidfile is not stale.
             return False
