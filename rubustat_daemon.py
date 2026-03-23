@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import subprocess
@@ -15,6 +15,13 @@ from operator import itemgetter
 
 import sqlite3
 from schedule import schedule
+
+indoorTemp = 0
+humidity = 0
+temperature = 0
+heatStatus = 0
+coolStatus = 0
+fanStatus = 0
 
 #set working directory to where "rubustat_daemon.py" is
 abspath = os.path.abspath(__file__)
@@ -53,10 +60,16 @@ sensor_type = config.get('main','sensor_type')
 sensor_pin  = int(config.get('main','sensor_pin'))
 
 if GPIOE == 1:
-    import RPi.GPIO as GPIO
+    try:
+        import RPi.GPIO as GPIO
+    except:
+        import Mock.GPIO as GPIO
 
 if sensor_type == 'DHT_11':
-    import Adafruit_DHT
+    try:
+        import Adafruit_DHT
+    except:
+        print("Cannot locate Adafruit_DHT")
 
 #mail config
 mailEnabled = config.getboolean('mail', 'enabled')
@@ -92,18 +105,25 @@ class rubustatDaemon(Daemon):
             GPIO.setup(OB_PIN, GPIO.OUT, initial=PIN_OFF)
             GPIO.setup(AC_PIN, GPIO.OUT, initial=PIN_OFF)
             GPIO.setup(FAN_PIN, GPIO.OUT, initial=PIN_OFF)
-    
-            subprocess.Popen("echo " + str(HEATER_PIN) + " > /sys/class/gpio/export", shell=True)
-            subprocess.Popen("echo " + str(OB_PIN) + " > /sys/class/gpio/export", shell=True)
-            subprocess.Popen("echo " + str(AC_PIN) + " > /sys/class/gpio/export", shell=True)
-            subprocess.Popen("echo " + str(FAN_PIN) + " > /sys/class/gpio/export", shell=True)
+
+            try:
+                subprocess.Popen("echo " + str(HEATER_PIN) + " > /sys/class/gpio/export", shell=True)
+                subprocess.Popen("echo " + str(OB_PIN) + " > /sys/class/gpio/export", shell=True)
+                subprocess.Popen("echo " + str(AC_PIN) + " > /sys/class/gpio/export", shell=True)
+                subprocess.Popen("echo " + str(FAN_PIN) + " > /sys/class/gpio/export", shell=True)
+            except:
+                print("No GPIO present")
 
     def getHVACState(self):
+        global obStatus,heatStatus,coolStatus,fanStatus
         if GPIOE == 1:
-            obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-            heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-            coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-            fanStatus  = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+            try:
+                obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                fanStatus  = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+            except:
+                print("No GPIO")
     
             if AC_TYPE == 0:
                 # Standard AC
@@ -274,19 +294,23 @@ class rubustatDaemon(Daemon):
     def updateTemp(self):
 #        if DEBUG >= 1:
 #        print "Called updateTemp\n"
+        global indoorTemp, humidity, temperature
 
         if sensor_type == 'DHT_11':
-            sensor = 11
-            humidity, temperature = Adafruit_DHT.read_retry(sensor, sensor_pin)
-            if temperature:
-                if SCALE == 'F':
-                    indoorTemp = float(temperature * 9/5.0 + 32)
+            try:
+                sensor = 11
+                humidity, temperature = Adafruit_DHT.read_retry(sensor, sensor_pin)
+                if temperature:
+                    if SCALE == 'F':
+                        indoorTemp = float(temperature * 9/5.0 + 32)
+                    else:
+                        indoorTemp = float(temperature)
                 else:
-                    indoorTemp = float(temperature)
-            else:
-                indoorTemp = 0
-            if not humidity:
-                humidity = 0
+                    indoorTemp = 0
+                if not humidity:
+                    humidity = 0
+            except:
+                print()
         else:
             #self.humidity = ''
             humidity = 0
@@ -543,16 +567,20 @@ class rubustatDaemon(Daemon):
 
             #loggin'stuff
             if DEBUG >= 1:
-                if PIN_ON == 0:
-                    obStatus   = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                    heatStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                    coolStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                    fanStatus  = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                else:
-                    obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                    heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                    coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-                    fanStatus  = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                try:
+                    if PIN_ON == 0:
+                        obStatus   = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                        heatStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                        coolStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                        fanStatus  = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                    else:
+                        obStatus   = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                        heatStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                        coolStatus = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                        fanStatus  = int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+                except:
+                    print("No GPIO")
+
                 log = open("logs/debug_" + datetime.datetime.now().strftime('%Y%m%d') + ".log", "a")
                 log.write("Report at " + time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + ":\n")
                 log.write("hvacState = " + str(hvacState)+ "\n")
@@ -592,13 +620,14 @@ if __name__ == "__main__":
             daemon.start()
         elif 'stop' == sys.argv[1]:
             #stop all HVAC activity when daemon stops
-            GPIO.setwarnings(False)
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(HEATER_PIN, GPIO.OUT, initial=PIN_OFF)
-            GPIO.setup(OB_PIN, GPIO.OUT, initial=PIN_OFF)
-            GPIO.setup(AC_PIN, GPIO.OUT, initial=PIN_OFF)
-            GPIO.setup(FAN_PIN, GPIO.OUT, initial=PIN_OFF)
-            daemon.stop()
+            if GPIOE == 1:
+                GPIO.setwarnings(False)
+                GPIO.setmode(GPIO.BCM)
+                GPIO.setup(HEATER_PIN, GPIO.OUT, initial=PIN_OFF)
+                GPIO.setup(OB_PIN, GPIO.OUT, initial=PIN_OFF)
+                GPIO.setup(AC_PIN, GPIO.OUT, initial=PIN_OFF)
+                GPIO.setup(FAN_PIN, GPIO.OUT, initial=PIN_OFF)
+                daemon.stop()
         elif 'restart' == sys.argv[1]:
             daemon.restart()
         else:

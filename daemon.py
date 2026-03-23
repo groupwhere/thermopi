@@ -30,7 +30,7 @@ class Daemon:
                 # exit first parent
 #                sys.stderr.write("PID Fork 1: %s\n" % (pid))
                 sys.exit(0)
-		#except OSError, e:
+        #except OSError, e:
         except Exception as e:
             sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
@@ -46,7 +46,7 @@ class Daemon:
                 # exit from second parent
 #                sys.stderr.write("PID Fork 2: %s\n" % (pid))
                 sys.exit(0)
-		#except OSError, e:
+        #except OSError, e:
         except Exception as e:
             sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
@@ -54,9 +54,9 @@ class Daemon:
         # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
-        si = file(self.stdin, 'r')
-        so = file(self.stdout, 'a+')
-        se = file(self.stderr, 'a+', 0)
+        si = open(self.stdin, 'r')
+        so = open(self.stdout, 'a+')
+        se = open(self.stderr, 'a+')#, 0)
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
 #sys.stderr.write("PID File about to be written\n")
@@ -66,7 +66,7 @@ class Daemon:
         atexit.register(self.delpid)
         pid = str(os.getpid())
 #        sys.stderr.write("PID File written: %s\n" % (pid))
-        file(self.pidfile,'w+').write("%s\n" % pid)
+        open(self.pidfile,'w+').write("%s\n" % pid)
 
     def delpid(self):
         os.remove(self.pidfile)
@@ -92,7 +92,7 @@ class Daemon:
         """
         # Check for a pidfile to see if the daemon already runs
         try:
-            pf = file(self.pidfile,'r')
+            pf = open(self.pidfile,'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
@@ -114,7 +114,7 @@ class Daemon:
         """
         # Check for a pidfile to see if the daemon already runs
         try:
-            pf = file(self.pidfile,'r')
+            pf = open(self.pidfile,'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
@@ -139,7 +139,7 @@ class Daemon:
         """
         # Get the pid from the pidfile
         try:
-            pf = file(self.pidfile,'r')
+            pf = open(self.pidfile,'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import os
 import subprocess
 import re
@@ -132,24 +132,31 @@ if scheduleEnabled == True:
         setStat()
 
 def _getWhatsOn():
-    obStatus   = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-    heatStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-    coolStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
-    fanStatus  = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+    global obStatus,heatStatus,coolStatus,fanStatus
+
+    try:
+        obStatus   = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(OB_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+        heatStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(HEATER_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+        coolStatus = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(AC_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+        fanStatus  = not int(subprocess.Popen("cat /sys/class/gpio/gpio" + str(FAN_PIN) + "/value", shell=True, stdout=subprocess.PIPE).stdout.read().strip())
+    except:
+        print("No GPIO present"
 
     obString   = "<p id=\"heat\"> heat off </p>"
     heatString = "<p id=\"heat\"> heat off </p>"
     coolString = "<p id=\"cool\"> cool off </p>"
     fanString  = "<p id=\"fan\"> fan off </p>"
-    if heatStatus == 1:
-        heatString = "<p id=\"heatOn\"> ON EMERGENCY </p>"
-    elif coolStatus == 1 and obStatus == 1:
-        heatString = "<p id=\"heatOn\"> HEAT ON </p>"
-    if coolStatus == 1 and obStatus == 0:
-        coolString = "<p id=\"coolOn\"> COOL ON </p>"
-    if fanStatus == 1:
-        fanString = "<p id=\"fanOn\"> FAN ON </p>"
-
+    try:
+        if heatStatus == 1:
+            heatString = "<p id=\"heatOn\"> ON EMERGENCY </p>"
+        elif coolStatus == 1 and obStatus == 1:
+            heatString = "<p id=\"heatOn\"> HEAT ON </p>"
+        if coolStatus == 1 and obStatus == 0:
+            coolString = "<p id=\"coolOn\"> COOL ON </p>"
+        if fanStatus == 1:
+            fanString = "<p id=\"fanOn\"> FAN ON </p>"
+    except:
+        print("No GPIO present"
     return heatString + coolString + fanString
 
 def _getDaemonStatus():
